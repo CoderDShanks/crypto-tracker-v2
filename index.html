@@ -1,96 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <title>Crypto Dividend Tracker</title>
-  <!-- Chart.js UMD bundle -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" defer></script>
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&family=Plus+Jakarta+Sans:wght@300;500&display=swap" rel="stylesheet">
   <style>
-    /* ─── Animated Background ───────────────────────────────────────── */
+    /* ── Full‐screen container ────────────────────────────────────────── */
+    html, body {
+      height: 100%;
+      margin: 0; padding: 0;
+      overflow: hidden;
+    }
     body {
-      margin: 0; padding: 2rem;
       font-family: 'Plus Jakarta Sans', sans-serif;
       color: #fff;
-      min-height: 100vh;
+      /* animated wave gradient */
       background: linear-gradient(-45deg, #0d0b13, #1a1a23, #0d0b13, #1a1a23);
       background-size: 400% 400%;
-      animation: bgWave 30s ease infinite;
+      animation: bgWave 25s ease infinite;
+      display: flex;
+      flex-direction: column;
     }
     @keyframes bgWave {
       0%   { background-position: 0% 50%; }
       50%  { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
+    .container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+      box-sizing: border-box;
+    }
+    /* ── Header ───────────────────────────────────────────────────────── */
+    h1 {
+      font-family: 'Inter', sans-serif;
+      font-size: 2.25rem;
+      text-align: center;
+      margin-bottom: .5rem;
+      text-shadow: 0 0 6px rgba(0,0,0,0.8);
+    }
+    p.subtitle {
+      text-align: center;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 1rem;
+    }
 
-    h1 { text-align: center; font-size: 2.5rem; margin-bottom: 1rem; font-family: 'Inter', sans-serif; }
-    h2 { font-size: 1.5rem; margin-bottom: .75rem; }
-
-    /* ─── Luxurious Glass Panels ─────────────────────────────────────── */
+    /* ── Luxurious Glass Panels ───────────────────────────────────────── */
     .glass {
       position: relative;
-      background: rgba( 255, 255, 255, 0.08 );
-      backdrop-filter: blur( 16px );
-      border: 1px solid rgba( 212,175,55, 0.6 );
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(16px);
+      border: 2px solid rgba(212,175,55,0.8);
       border-radius: 16px;
       padding: 1rem 1.5rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 8px 32px rgba( 0,0,0,0.6 ), 0 0 20px rgba( 212,175,55,0.4 );
+      margin-bottom: 1.25rem;
+      box-shadow: 
+        0 8px 32px rgba(0,0,0,0.7),
+        0 0 20px rgba(212,175,55,0.5);
       overflow: hidden;
       transition: box-shadow .3s ease;
     }
     .glass:hover {
-      box-shadow: 0 12px 48px rgba( 0,0,0,0.8 ), 0 0 30px rgba( 212,175,55,0.6 );
+      box-shadow:
+        0 12px 48px rgba(0,0,0,0.9),
+        0 0 30px rgba(212,175,55,0.7);
     }
     .glass::before {
       content: "";
-      position: absolute; top:-50%; left:-50%;
-      width: 200%; height: 200%;
-      background: linear-gradient(120deg, rgba(255,255,255,0.3), transparent 60%);
-      transform: rotate(25deg) translateX(-200%);
+      position: absolute; top:-40%; left:-40%;
+      width:180%; height:180%;
+      background: url('data:image/svg+xml;utf8,\
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" fill-opacity="0.03">\
+<circle cx="100" cy="100" r="100" fill="white"/></svg>')
+        center/cover no-repeat;
+      transform: translateX(-100%) rotate(30deg);
       transition: transform .8s ease, opacity .8s ease;
       opacity: 0;
     }
     .glass:hover::before {
-      transform: rotate(25deg) translateX(200%);
-      opacity: .25;
+      transform: translateX(100%) rotate(30deg);
+      opacity: .2;
     }
 
-    /* ─── Buttons & Inputs ─────────────────────────────────────────── */
+    /* ── Chart Panel ──────────────────────────────────────────────────── */
+    #chartPanel {
+      flex: 0 0 auto;
+    }
+    #chartContainer {
+      height: 180px; /* smaller, to fit without scroll */
+    }
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* ── Controls Panel ──────────────────────────────────────────────── */
+    #controls {
+      flex: 0 0 auto;
+    }
+    .row { display: flex; align-items: center; justify-content: center; }
+    .row.space { justify-content: flex-end; }
+    .spaced > * { margin: 0 .3rem; }
+    .grid { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .grid > * { flex: 1; min-width: 120px; }
+
+    /* ── Buttons & Inputs ───────────────────────────────────────────── */
     .btn {
       background: linear-gradient(90deg,#D4AF37,#FFD700);
       color: #0d0b13;
-      border: none;
-      border-radius: 8px;
-      padding: .6rem 1.2rem;
-      font-size: 1rem;
+      border: none; border-radius: 8px;
+      padding: .6rem 1.2rem; font-size: 1rem;
       cursor: pointer;
-      box-shadow: 0 4px 16px rgba( 0,0,0,0.5 );
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5),
+                  0 0 8px rgba(212,175,55,0.7);
       transition: transform .1s, box-shadow .2s;
     }
-    .btn:hover { box-shadow: 0 6px 24px rgba( 0,0,0,0.7 ); }
+    .btn:hover {
+      box-shadow: 0 6px 24px rgba(0,0,0,0.7),
+                  0 0 12px rgba(212,175,55,0.9);
+    }
     .btn:active { transform: scale(.95); }
 
     .circle-btn {
       width: 44px; height: 44px;
       background: rgba(255,255,255,0.15);
-      color: #fff; border: none; border-radius: 50%;
+      color: #fff;
+      border: 2px solid rgba(212,175,55,0.8);
+      border-radius: 50%;
       font-size: 1.2rem; cursor: pointer;
-      box-shadow: 0 2px 12px rgba( 0,0,0,0.6 );
-      transition: background .2s, transform .1s;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.6),
+                  0 0 6px rgba(212,175,55,0.5);
+      transition: background .2s, transform .1s, box-shadow .2s;
       margin: 0 .25rem;
     }
-    .circle-btn:hover { background: rgba(255,255,255,0.25); }
+    .circle-btn:hover {
+      background: rgba(255,255,255,0.25);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.7),
+                  0 0 8px rgba(212,175,55,0.7);
+    }
     .circle-btn:active { transform: scale(.9); }
 
     select, input[type=number] {
-      width: 100%;
-      padding: .6rem;
-      margin: .4rem 0;
+      width: 100%; padding: .6rem; margin: .4rem 0;
       background: rgba(255,255,255,0.15);
-      border: none; border-radius: 8px;
+      border: 2px solid rgba(212,175,55,0.8);
+      border-radius: 8px;
       color: #fff; font-size: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
     }
     select {
       appearance: none;
@@ -100,20 +161,14 @@
       background-size: 10px;
     }
 
-    /* ─── Layout Helpers ───────────────────────────────────────────── */
-    .row { display:flex; align-items:center; justify-content:center; }
-    .row.space { justify-content:flex-end; }
-    .spaced > * { margin: 0 .3rem; }
-    .grid { display:flex; flex-wrap:wrap; gap:.5rem; }
-    .grid > * { flex:1; min-width:130px; }
-
-    /* ─── Table ─────────────────────────────────────────────────────── */
+    /* ── Table ───────────────────────────────────────────────────────── */
     table {
-      width: 100%; border-collapse: collapse; margin-top: 1rem; 
+      width: 100%; border-collapse: collapse; margin-top: .75rem;
       font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: .9rem;
     }
     th, td {
-      padding: .6rem 1.2rem;
+      padding: .6rem 1rem;
       border-bottom: 1px solid rgba(255,255,255,0.2);
     }
     th { text-align: left; color: rgba(255,255,255,0.7); }
@@ -123,68 +178,70 @@
 </head>
 <body>
 
-  <h1>Crypto Dividend Tracker</h1>
-  <p style="text-align:center; color:rgba(255,255,255,0.6); margin-bottom:2rem;">
-    A luxurious, moving-wave glass UI with gold accents
-  </p>
+  <div class="container">
+    <h1>Crypto Dividend Tracker</h1>
+    <p class="subtitle">A luxurious, wave-animated background with gold-edged glass panels</p>
 
-  <!-- Dividend Performance Chart -->
-  <div class="glass">
-    <h2>Dividend Performance</h2>
-    <canvas id="chart" height="180"></canvas>
-  </div>
+    <!-- Dividend Performance Chart -->
+    <div id="chartPanel" class="glass" data-glow="gold">
+      <h2>Dividend Performance</h2>
+      <div id="chartContainer" style="height:180px;">
+        <canvas id="chart"></canvas>
+      </div>
+    </div>
 
-  <!-- Controls Panel -->
-  <div class="glass">
-    <div class="row space spaced">
-      <button id="delPrev" class="circle-btn">−</button>
-      <button id="addPrev" class="circle-btn">＋</button>
-      <button id="addNext" class="circle-btn">＋</button>
-      <button id="delNext" class="circle-btn">−</button>
+    <!-- Controls Panel -->
+    <div id="controls" class="glass" data-glow="gold">
+      <div class="row space spaced">
+        <button id="delPrev" class="circle-btn">−</button>
+        <button id="addPrev" class="circle-btn">＋</button>
+        <button id="addNext" class="circle-btn">＋</button>
+        <button id="delNext" class="circle-btn">−</button>
+      </div>
+      <div class="row spaced" style="margin:1rem 0;">
+        <button id="prev" class="circle-btn">&lt;</button>
+        <span id="epochNum" style="font-size:1.2rem;">Epoch #1</span>
+        <button id="next" class="circle-btn">&gt;</button>
+      </div>
+      <div id="epochRange" style="text-align:center; opacity:.8; margin-bottom:1rem;">
+        Loading…
+      </div>
+      <div class="grid">
+        <select id="crypto">
+          <option value="">Choose Crypto</option>
+          <option value="pharaoh">Pharaoh</option>
+          <option value="velodrome">Velodrome</option>
+        </select>
+        <input id="amount" type="number" placeholder="Amount USD"/>
+        <button id="addBtn" class="btn">Add / Update</button>
+      </div>
     </div>
-    <div class="row spaced" style="margin:1rem 0;">
-      <button id="prev" class="circle-btn">&lt;</button>
-      <span id="epochNum" style="font-size:1.2rem;">Epoch #1</span>
-      <button id="next" class="circle-btn">&gt;</button>
-    </div>
-    <div id="epochRange" style="text-align:center; opacity:.7; margin-bottom:1.2rem;">
-      Loading…
-    </div>
-    <div class="grid">
-      <select id="crypto">
-        <option value="">Choose Crypto</option>
-        <option value="pharaoh">Pharaoh</option>
-        <option value="velodrome">Velodrome</option>
-      </select>
-      <input id="amount" type="number" placeholder="Amount USD"/>
-      <button id="addBtn" class="btn">Add / Update</button>
-    </div>
-  </div>
 
-  <!-- Table Panel -->
-  <div class="glass">
-    <table>
-      <thead>
-        <tr><th>Epoch #</th><th>Pharaoh</th><th>Velodrome</th><th>Total</th></tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
+    <!-- Table Panel -->
+    <div class="glass" data-glow="gold">
+      <table>
+        <thead>
+          <tr><th>Epoch #</th><th>Pharaoh</th><th>Velodrome</th><th>Total</th></tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
   </div>
 
   <script>
   window.onload = function() {
-    const STORAGE = 'divTracker';
+    const STORAGE = 'divTrackerLux';
     const loadData = () => JSON.parse(localStorage.getItem(STORAGE)||'{}');
     const saveData = d => localStorage.setItem(STORAGE, JSON.stringify(d));
 
     function epochStart(d) {
-      const day=d.getDay(), diff=day>=4?day-4:day+3;
-      const s=new Date(d); s.setDate(d.getDate()-diff);
+      const day = d.getDay(), diff = day>=4 ? day-4 : day+3;
+      const s = new Date(d); s.setDate(d.getDate()-diff);
       return new Date(s.getFullYear(),s.getMonth(),s.getDate());
     }
-    const keyFmt = d=>d.toISOString().slice(0,10);
+    const keyFmt = d => d.toISOString().slice(0,10);
     function labelFmt(s) {
-      const e=new Date(s); e.setDate(s.getDate()+6);
+      const e = new Date(s); e.setDate(s.getDate()+6);
       const o={month:'short',day:'numeric'};
       return `${s.toLocaleDateString(undefined,o)}–${e.toLocaleDateString(undefined,o)}, ${e.getFullYear()}`;
     }
@@ -197,12 +254,12 @@
     })();
     let current = epochs.indexOf(keyFmt(epochStart(new Date())));
 
-    // Chart.js
     const ctx = document.getElementById('chart').getContext('2d');
-    const chart = new Chart(ctx,{ type:'line',
+    const chart = new Chart(ctx, {
+      type:'line',
       data:{ labels:[], datasets:[
-        { label:'Total', data:[], borderColor:'#D4AF37', backgroundColor:'rgba(212,175,55,0.3)', fill:true },
-        { label:'Pharaoh', data:[], borderColor:'#ec4899', backgroundColor:'rgba(236,72,153,0.3)', fill:false },
+        { label:'Total',     data:[], borderColor:'#D4AF37', backgroundColor:'rgba(212,175,55,0.3)', fill:true },
+        { label:'Pharaoh',   data:[], borderColor:'#ec4899', backgroundColor:'rgba(236,72,153,0.3)', fill:false },
         { label:'Velodrome', data:[], borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.2)', fill:false }
       ]},
       options:{ responsive:true, scales:{ x:{ title:{display:true,text:'Epoch #'}}, y:{ beginAtZero:true } } }
@@ -224,7 +281,7 @@
       chart.data.datasets[2].data = arr.map(x=>x.velodrome);
       chart.update();
 
-      document.getElementById('epochNum').textContent = `Epoch #${arr[current].idx}`;
+      document.getElementById('epochNum').textContent   = `Epoch #${arr[current].idx}`;
       document.getElementById('epochRange').textContent = arr[current].label;
       document.getElementById('prev').disabled = current===0;
       document.getElementById('next').disabled = current===arr.length-1;
@@ -239,13 +296,12 @@
       `).join('');
     }
 
-    // Controls
-    document.getElementById('addPrev').onclick = ()=>{ const d=new Date(epochs[0]); d.setDate(d.getDate()-7); epochs.unshift(keyFmt(d)); current=0; render(); };
-    document.getElementById('delPrev').onclick = ()=>{ if(epochs.length>1){ epochs.shift(); if(current>0) current--; render(); } };
-    document.getElementById('addNext').onclick = ()=>{ const d=new Date(epochs[epochs.length-1]); d.setDate(d.getDate()+7); epochs.push(keyFmt(d)); current=epochs.length-1; render(); };
-    document.getElementById('delNext').onclick = ()=>{ if(epochs.length>1){ epochs.pop(); if(current>=epochs.length) current=epochs.length-1; render(); } };
-    document.getElementById('prev').onclick    = ()=>{ if(current>0) current--; render(); };
-    document.getElementById('next').onclick    = ()=>{ if(current<epochs.length-1) current++; render(); };
+    document.getElementById('addPrev').onclick    = ()=>{ const d=new Date(epochs[0]); d.setDate(d.getDate()-7); epochs.unshift(keyFmt(d)); current=0; render(); };
+    document.getElementById('delPrev').onclick    = ()=>{ if(epochs.length>1){ epochs.shift(); if(current>0) current--; render(); } };
+    document.getElementById('addNext').onclick    = ()=>{ const d=new Date(epochs[epochs.length-1]); d.setDate(d.getDate()+7); epochs.push(keyFmt(d)); current=epochs.length-1; render(); };
+    document.getElementById('delNext').onclick    = ()=>{ if(epochs.length>1){ epochs.pop(); if(current>=epochs.length) current=epochs.length-1; render(); } };
+    document.getElementById('prev').onclick       = ()=>{ if(current>0) current--; render(); };
+    document.getElementById('next').onclick       = ()=>{ if(current<epochs.length-1) current++; render(); };
 
     document.getElementById('addBtn').onclick = ()=> {
       const c=document.getElementById('crypto').value;
@@ -253,10 +309,7 @@
       if(!c||isNaN(a)) return alert('Select a crypto & enter valid amount.');
       const key=epochs[current], d=loadData();
       if(!d[key]) d[key]={pharaoh:0,velodrome:0};
-      d[key][c]+=a;
-      saveData(d);
-      document.getElementById('amount').value='';
-      render();
+      d[key][c]+=a; saveData(d); document.getElementById('amount').value=''; render();
     };
 
     render();
