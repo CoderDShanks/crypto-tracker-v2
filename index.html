@@ -3,192 +3,316 @@
 <head>
   <meta charset="UTF-8"/>
   <title>Crypto Dividend Tracker</title>
-  <!-- TailwindCSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&family=Plus+Jakarta+Sans:wght@300;500&display=swap" rel="stylesheet">
+  <style>
+    /* ───────── Base Reset & Body ───────── */
+    * { box-sizing: border-box; margin:0; padding:0; }
+    body {
+      min-height: 100vh;
+      background: #0d0b13;
+      font-family: 'Inter', sans-serif;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      width: 100%;
+      max-width: 900px;
+    }
+    h1 { text-align: center; margin-bottom: 8px; font-size: 2.5rem; }
+    h2 { margin-bottom: 12px; font-size: 1.5rem; }
+
+    /* ───────── Glass Panels ───────── */
+    .glass {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(12px);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow 0.3s ease;
+    }
+    .glass:hover {
+      box-shadow: 0 12px 36px rgba(0,0,0,0.8);
+    }
+    .glass::before {
+      content: '';
+      position: absolute; top:-50%; left:-50%;
+      width:200%; height:200%;
+      background: linear-gradient(120deg, rgba(255,255,255,0.2), transparent 60%);
+      transform: rotate(25deg) translateX(-200%);
+      transition: transform 0.7s ease, opacity 0.7s ease;
+      opacity: 0;
+    }
+    .glass:hover::before {
+      transform: rotate(25deg) translateX(200%);
+      opacity: 0.3;
+    }
+
+    /* ───────── Buttons & Inputs ───────── */
+    .button {
+      background: linear-gradient(90deg,#5a67d8,#9f7aea);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      padding: 10px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      transition: transform 0.1s, box-shadow 0.2s;
+      margin: 4px;
+    }
+    .button:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.7); }
+    .button:active { transform: scale(0.95); }
+
+    .circle-btn {
+      width: 44px; height: 44px;
+      background: rgba(255,255,255,0.15);
+      border: none; border-radius: 50%;
+      color: #fff; font-size: 1.25rem;
+      cursor: pointer;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.6);
+      transition: background 0.2s, transform 0.1s;
+      margin: 4px;
+    }
+    .circle-btn:hover { background: rgba(255,255,255,0.25); }
+    .circle-btn:active { transform: scale(0.9); }
+
+    select, input[type="number"] {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      padding: 10px;
+      font-size: 1rem;
+      margin: 4px;
+      width: 100%;
+      max-width: 250px;
+    }
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg fill='white' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath d='M2 5L0 0h4z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 10px;
+    }
+
+    /* ───────── Table ───────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    th { text-align: left; color: rgba(255,255,255,0.7); }
+    td { text-align: right; }
+    td:first-child { text-align: left; }
+
+    /* ───────── Responsive ───────── */
+    @media (max-width: 600px) {
+      .grid-4 { display: block; }
+      .grid-4 > * { margin-bottom: 12px; width: 100%; }
+    }
+    @media (min-width: 601px) {
+      .grid-4 { display: flex; gap: 12px; align-items: flex-end; }
+      .grid-4 > * { flex: 1; }
+      .grid-4 > .button { flex: 0 0 auto; }
+    }
+  </style>
 </head>
-<body class="bg-[#0d0b13] text-gray-100 font-[PlusJakartaSans] min-h-screen p-8
-             bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.05),_transparent_70%)]">
+<body>
+  <div class="container">
 
-  <!-- Title -->
-  <h1 class="text-5xl font-[Inter] text-center text-white drop-shadow-lg mb-2">
-    Crypto Dividend Tracker
-  </h1>
-  <p class="text-center text-gray-400 mb-12">
-    Track your earnings across epochs with a cutting-edge glass UI
-  </p>
+    <!-- Title -->
+    <h1>Crypto Dividend Tracker</h1>
+    <p style="text-align:center; color:rgba(255,255,255,0.6); margin-bottom:32px;">
+      Track your earnings across epochs with a cutting-edge glass theme
+    </p>
 
-  <!-- Dividend Performance Chart -->
-  <div class="relative bg-white/5 backdrop-blur-lg rounded-2xl p-8 mb-12 overflow-hidden transition-shadow hover:shadow-2xl">
-    <!-- glass shine -->
-    <div class="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 hover:opacity-30 transition-opacity duration-700 transform -translate-x-full rotate-12"></div>
-    <h2 class="text-2xl font-semibold text-white mb-4">Dividend Performance</h2>
-    <canvas id="divChart" class="w-full h-64"></canvas>
-  </div>
-
-  <!-- Controls Panel -->
-  <div class="relative bg-white/5 backdrop-blur-lg rounded-2xl p-8 mb-12 overflow-hidden transition-shadow hover:shadow-2xl">
-    <div class="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 hover:opacity-30 transition-opacity duration-700 transform -translate-x-full rotate-12"></div>
-    <!-- add/remove epochs -->
-    <div class="flex justify-end space-x-3 mb-4">
-      <button id="deletePrevEpoch" class="w-12 h-12 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">−</button>
-      <button id="addPrevEpoch"    class="w-12 h-12 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">＋</button>
-      <button id="addNextEpoch"    class="w-12 h-12 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">＋</button>
-      <button id="deleteNextEpoch" class="w-12 h-12 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">−</button>
+    <!-- Chart Panel -->
+    <div class="glass">
+      <h2>Dividend Performance</h2>
+      <canvas id="divChart" height="200"></canvas>
     </div>
-    <!-- navigate epochs -->
-    <div class="flex justify-center items-center space-x-6 mb-2">
-      <button id="prevEpoch" class="w-12 h-12 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">&lt;</button>
-      <div id="epochNumber" class="text-2xl font-medium text-white">Epoch #1</div>
-      <button id="nextEpoch" class="w-12 h-12 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">&gt;</button>
-    </div>
-    <div id="epochRange" class="text-center text-gray-300 italic mb-6">Loading…</div>
-    <!-- data entry -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-      <div>
-        <label class="block mb-1 text-gray-300">Select Crypto</label>
-        <select id="cryptoSelect"
-                class="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-2 
-                       text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500">
-          <option value="" disabled selected>Choose…</option>
+
+    <!-- Controls Panel -->
+    <div class="glass">
+      <!-- Add/Remove Epochs -->
+      <div style="text-align:right; margin-bottom:16px;">
+        <button id="delPrevEpoch"    class="circle-btn">−</button>
+        <button id="addPrevEpoch"    class="circle-btn">＋</button>
+        <button id="addNextEpoch"    class="circle-btn">＋</button>
+        <button id="delNextEpoch"    class="circle-btn">−</button>
+      </div>
+
+      <!-- Epoch Navigator -->
+      <div style="text-align:center; margin-bottom:8px;">
+        <button id="prevEpoch" class="circle-btn">&lt;</button>
+        <span id="epochNumber" style="font-size:1.2rem; margin:0 12px;">Epoch #1</span>
+        <button id="nextEpoch" class="circle-btn">&gt;</button>
+      </div>
+      <div id="epochRange" style="text-align:center; color:rgba(255,255,255,0.6); margin-bottom:24px;">
+        Loading…
+      </div>
+
+      <!-- Entry Form -->
+      <div class="grid-4">
+        <select id="cryptoSelect">
+          <option value="">Choose Crypto</option>
           <option value="pharaoh">Pharaoh</option>
           <option value="velodrome">Velodrome</option>
         </select>
+        <input id="divAmount" type="number" placeholder="Amount USD"/>
+        <button id="addBtn" class="button">Add / Update</button>
       </div>
-      <div class="md:col-span-2">
-        <label class="block mb-1 text-gray-300">USD Amount</label>
-        <input id="divAmount" type="number" step="0.01" placeholder="e.g. 12.50"
-               class="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-2 
-                      text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"/>
-      </div>
-      <button id="addBtn"
-              class="bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-full 
-                     px-8 py-3 font-semibold shadow-lg hover:shadow-2xl">
-        Add / Update
-      </button>
     </div>
-  </div>
 
-  <!-- Epoch Table -->
-  <div class="relative bg-white/5 backdrop-blur-lg rounded-2xl p-6 overflow-x-auto transition-shadow hover:shadow-2xl">
-    <div class="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 hover:opacity-30 transition-opacity duration-700 transform -translate-x-full rotate-12"></div>
-    <table class="w-full text-sm">
-      <thead class="text-gray-400">
-        <tr>
-          <th class="p-3 text-left">Epoch #</th>
-          <th class="p-3 text-right">Pharaoh</th>
-          <th class="p-3 text-right">Velodrome</th>
-          <th class="p-3 text-right">Total</th>
-        </tr>
-      </thead>
-      <tbody id="divTable"></tbody>
-    </table>
+    <!-- Table Panel -->
+    <div class="glass">
+      <table>
+        <thead>
+          <tr>
+            <th>Epoch #</th>
+            <th>Pharaoh</th>
+            <th>Velodrome</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="divTable"></tbody>
+      </table>
+    </div>
   </div>
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const STORAGE = 'dividends';
-    const load = () => JSON.parse(localStorage.getItem(STORAGE) || '{}');
-    const save = v => localStorage.setItem(STORAGE, JSON.stringify(v));
+    const STORAGE_KEY = 'dividends_app';
+    const loadData = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    const saveData = d => localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
 
-    // epoch helpers
-    const epochStart = d => {
-      const day = d.getDay(), diff = day>=4 ? day-4 : day+3;
-      const s = new Date(d); s.setDate(d.getDate()-diff);
-      return new Date(s.getFullYear(), s.getMonth(), s.getDate());
+    // Epoch = Thursday→Wednesday
+    const epochStart = date => {
+      const day = date.getDay(), diff = day >= 4 ? day - 4 : day + 3;
+      const d = new Date(date); d.setDate(date.getDate() - diff);
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
     };
-    const fmtKey = d => d.toISOString().slice(0,10);
-    const fmtLabel = s => {
-      const e = new Date(s); e.setDate(s.getDate()+6);
-      const o={month:'short',day:'numeric'};
-      return `${s.toLocaleDateString(undefined,o)}–${e.toLocaleDateString(undefined,o)}, ${e.getFullYear()}`;
+    const keyFmt = d => d.toISOString().slice(0,10);
+    const labelFmt = start => {
+      const end = new Date(start); end.setDate(start.getDate()+6);
+      const fmt = opts => start.toLocaleDateString(undefined, opts) + '–' +
+                         end.toLocaleDateString(undefined, opts);
+      return fmt({month:'short',day:'numeric'}) + `, ${end.getFullYear()}`;
     };
 
-    // init epoch list
+    // Initialize epoch list
     let epochs = (() => {
-      const d = load(), keys = Object.keys(d);
-      const cur = fmtKey(epochStart(new Date()));
-      if (!keys.includes(cur)) keys.push(cur);
+      const data = loadData(), keys = Object.keys(data);
+      const curr = keyFmt(epochStart(new Date()));
+      if (!keys.includes(curr)) keys.push(curr);
       return keys.sort();
     })();
 
-    let current = epochs.indexOf(fmtKey(epochStart(new Date())));
+    let current = epochs.indexOf(keyFmt(epochStart(new Date())));
 
-    // prepare data array
+    // Prepare data for chart/table
     const prepare = () => {
-      const data = load();
-      return epochs.sort().map((k,i)=>{
-        const v = data[k] || {pharaoh:0,velodrome:0};
-        return { key:k, idx:i+1, label: fmtLabel(new Date(k)), pharaoh:v.pharaoh, velodrome:v.velodrome, total:v.pharaoh+v.velodrome };
+      const data = loadData();
+      return epochs.sort().map((k,i) => {
+        const v = data[k] || {pharaoh:0, velodrome:0};
+        return {
+          key: k, idx: i+1, label: labelFmt(new Date(k)),
+          pharaoh: v.pharaoh, velodrome: v.velodrome,
+          total: v.pharaoh + v.velodrome
+        };
       });
     };
 
-    // Chart.js rendering
+    // Chart.js setup
     const ctx = document.getElementById('divChart').getContext('2d');
     const chart = new Chart(ctx, {
-      type:'line',
-      data:{ labels:[], datasets:[
+      type: 'line',
+      data: { labels: [], datasets: [
         { label:'Total',     data:[], borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,0.2)', fill:true, tension:0.4, pointRadius:4 },
         { label:'Pharaoh',   data:[], borderColor:'#ec4899', backgroundColor:'rgba(236,72,153,0.2)', fill:false, tension:0.4, pointRadius:3 },
         { label:'Velodrome', data:[], borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.2)', fill:false, tension:0.4, pointRadius:3 }
       ]]},
-      options:{ responsive:true, scales:{
-        x:{ title:{display:true,text:'Epoch #'}, ticks:{color:'#cbd5e1',callback:v=>'#'+v}, grid:{color:'rgba(203,213,225,0.1)'} },
-        y:{ ticks:{color:'#cbd5e1'}, grid:{color:'rgba(203,213,225,0.1)'}, beginAtZero:true }
-      }, plugins:{ tooltip:{ callbacks:{ title:ctx=>prepare()[ctx[0].dataIndex].label }}, legend:{ labels:{color:'#f8fafc'} } } }
+      options: {
+        responsive:true,
+        scales: {
+          x: { title:{display:true,text:'Epoch #'}, ticks:{color:'#ccc',callback:v=>'#'+v}, grid:{color:'rgba(255,255,255,0.1)'} },
+          y: { ticks:{color:'#ccc'}, grid:{color:'rgba(255,255,255,0.1)'}, beginAtZero:true }
+        },
+        plugins: { tooltip:{ callbacks:{ title:ctx=>prepare()[ctx[0].dataIndex].label } }, legend:{ labels:{color:'#fff'} } }
+      }
     });
 
+    // Render all UI parts
     function render() {
       const arr = prepare();
-      chart.data.labels = arr.map(d=>d.idx);
-      chart.data.datasets[0].data = arr.map(d=>d.total.toFixed(2));
-      chart.data.datasets[1].data = arr.map(d=>d.pharaoh.toFixed(2));
-      chart.data.datasets[2].data = arr.map(d=>d.velodrome.toFixed(2));
+      // Chart
+      chart.data.labels   = arr.map(d=>d.idx);
+      chart.data.datasets[0].data = arr.map(d=>d.total);
+      chart.data.datasets[1].data = arr.map(d=>d.pharaoh);
+      chart.data.datasets[2].data = arr.map(d=>d.velodrome);
       chart.update();
-
-      // UI updates
+      // Navigator
       document.getElementById('epochNumber').textContent = `Epoch #${arr[current].idx}`;
       document.getElementById('epochRange').textContent  = arr[current].label;
-      document.getElementById('prevEpoch').disabled     = current === 0;
-      document.getElementById('nextEpoch').disabled     = current === arr.length-1;
-
-      // table
+      document.getElementById('prevEpoch').disabled = (current === 0);
+      document.getElementById('nextEpoch').disabled = (current === arr.length-1);
+      // Table
       document.getElementById('divTable').innerHTML = arr.map(d=>`
         <tr>
-          <td class="p-3">#${d.idx}</td>
-          <td class="p-3 text-right text-pink-400">${d.pharaoh.toFixed(2)}</td>
-          <td class="p-3 text-right text-blue-400">${d.velodrome.toFixed(2)}</td>
-          <td class="p-3 text-right font-semibold">${d.total.toFixed(2)}</td>
+          <td>${d.idx}</td>
+          <td style="color:#ec4899;">${d.pharaoh.toFixed(2)}</td>
+          <td style="color:#3b82f6;">${d.velodrome.toFixed(2)}</td>
+          <td style="font-weight:600;">${d.total.toFixed(2)}</td>
         </tr>
       `).join('');
     }
 
-    // epoch controls
-    document.getElementById('addPrevEpoch').onclick    = ()=>{ const d=new Date(epochs[0]); d.setDate(d.getDate()-7); epochs.unshift(fmtKey(d)); current=0; render(); };
-    document.getElementById('deletePrevEpoch').onclick = ()=>{ if(epochs.length>1){ epochs.shift(); if(current>0) current--; render(); } };
-    document.getElementById('addNextEpoch').onclick    = ()=>{ const d=new Date(epochs[epochs.length-1]); d.setDate(d.getDate()+7); epochs.push(fmtKey(d)); current=epochs.length-1; render(); };
-    document.getElementById('deleteNextEpoch').onclick = ()=>{ if(epochs.length>1){ epochs.pop(); if(current>=epochs.length) current=epochs.length-1; render(); } };
-    document.getElementById('prevEpoch').onclick       = ()=>{ if(current>0) current--; render(); };
-    document.getElementById('nextEpoch').onclick       = ()=>{ if(current<epochs.length-1) current++; render(); };
+    // Epoch controls
+    document.getElementById('addPrevEpoch').onclick = () => {
+      const d = new Date(epochs[0]); d.setDate(d.getDate()-7);
+      epochs.unshift(keyFmt(d)); current = 0; render();
+    };
+    document.getElementById('delPrevEpoch').onclick = () => {
+      if (epochs.length>1) { epochs.shift(); if(current>0) current--; render(); }
+    };
+    document.getElementById('addNextEpoch').onclick = () => {
+      const d = new Date(epochs[epochs.length-1]); d.setDate(d.getDate()+7);
+      epochs.push(keyFmt(d)); current = epochs.length-1; render();
+    };
+    document.getElementById('delNextEpoch').onclick = () => {
+      if (epochs.length>1) { epochs.pop(); if(current>=epochs.length) current = epochs.length-1; render(); }
+    };
+    document.getElementById('prevEpoch').onclick = () => { if(current>0) current--; render(); };
+    document.getElementById('nextEpoch').onclick = () => { if(current<epochs.length-1) current++; render(); };
 
-    // add/update dividend
-    document.getElementById('addBtn').onclick = ()=> {
+    // Add / Update dividend
+    document.getElementById('addBtn').onclick = () => {
       const crypto = document.getElementById('cryptoSelect').value;
-      const amt = parseFloat(document.getElementById('divAmount').value);
-      if(!crypto||isNaN(amt)) return alert('Select crypto & enter a valid amount.');
+      const amtRaw = document.getElementById('divAmount').value;
+      const amt = parseFloat(amtRaw);
+      if(!crypto || isNaN(amt)) {
+        return alert('Please select a crypto and enter a valid amount.');
+      }
       const key = epochs[current];
-      const data = load();
-      data[key] ??= {pharaoh:0,velodrome:0};
+      const data = loadData();
+      if (!data[key]) data[key] = { pharaoh:0, velodrome:0 };
       data[key][crypto] += amt;
-      save(data);
+      saveData(data);
       document.getElementById('divAmount').value = '';
       render();
     };
 
-    // initial render
+    // Initial render
     render();
   });
   </script>
