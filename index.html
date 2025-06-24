@@ -87,47 +87,66 @@
 
   <script>
   // ─── Helpers ─────────────────────────────────────────────────────────────────
-  const LS = 'dividends_v5';
-  const load = () => JSON.parse(localStorage.getItem(LS)||'{}');
+  const LS = 'dividends_v6';
+  const load = () => JSON.parse(localStorage.getItem(LS) || '{}');
   const save = obj => localStorage.setItem(LS, JSON.stringify(obj));
 
   // compute epoch start (Thu→Wed)
   function epochStart(d) {
-    const day=d.getDay(), diff=day>=4?day-4:day+3;
-    const s=new Date(d); s.setDate(d.getDate()-diff);
-    return new Date(s.getFullYear(),s.getMonth(),s.getDate());
+    const day = d.getDay(), diff = day >= 4 ? day - 4 : day + 3;
+    const s = new Date(d); s.setDate(d.getDate() - diff);
+    return new Date(s.getFullYear(), s.getMonth(), s.getDate());
   }
-  const fmt = d=>d.toISOString().slice(0,10);
-
-  // build list of epochs: from first entry up to current
-  function buildEpochs(dataObj) {
-    const keys=Object.keys(dataObj);
-    // include current
-    const curr=fmt(epochStart(new Date()));
-    if(!keys.includes(curr)) keys.push(curr);
-    return keys.sort();
+  // format YYYY-MM-DD
+  const keyFmt = d => d.toISOString().slice(0,10);
+  // format human label e.g. "Jun 19–Jun 25, 2025"
+  function labelFmt(start) {
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    const opts = { month:'short', day:'numeric' };
+    const s = start.toLocaleDateString(undefined, opts);
+    const e = end.toLocaleDateString(undefined, opts);
+    const y = end.getFullYear();
+    return `${s}–${e}, ${y}`;
   }
 
-  // prepare chart/table data
+  // generate a list of epoch-start keys (past 52 to next 4)
+  function generateEpochKeys() {
+    const keys = [];
+    const today = new Date();
+    const base = epochStart(today);
+    for(let i = 52; i >= 0; i--) {
+      const d = new Date(base);
+      d.setDate(base.getDate() - i*7);
+      keys.push(keyFmt(d));
+    }
+    for(let i = 1; i <= 4; i++) {
+      const d = new Date(base);
+      d.setDate(base.getDate() + i*7);
+      keys.push(keyFmt(d));
+    }
+    return keys;
+  }
+
+  // prepare data array for chart & table
   function prepare(dataObj) {
-    const eps=buildEpochs(dataObj);
-    const chartData = eps.map(e=>{
-      const o=dataObj[e]||{pharaoh:0,velodrome:0};
-      return { epoch:e, pharaoh:o.pharaoh, velodrome:o.velodrome, total: o.pharaoh+o.velodrome };
+    const keys = generateEpochKeys();
+    return keys.map(k => {
+      const o = dataObj[k] || { pharaoh:0, velodrome:0 };
+      return { key:k, label: labelFmt(new Date(k)), pharaoh: o.pharaoh, velodrome: o.velodrome, total: o.pharaoh+o.velodrome };
     });
-    return chartData;
   }
 
   // ─── Chart.js Setup ───────────────────────────────────────────────────────────
-  const ctx=document.getElementById('divChart').getContext('2d');
-  const chart=new Chart(ctx,{
-    type:'line',
-    data:{ labels:[], datasets:[
-      { label:'Total',   data:[], borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,0.2)', fill:true, tension:0.4 },
-      { label:'Pharaoh', data:[], borderColor:'#ec4899', backgroundColor:'rgba(236,72,153,0.2)', fill:false, tension:0.4 },
-      { label:'Velodrome',data:[], borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.2)', fill:false, tension:0.4 },
+  const ctx = document.getElementById('divChart').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels:[], datasets:[
+      { label:'Total',     data:[], borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,0.2)', fill:true, tension:0.4, pointRadius:4 },
+      { label:'Pharaoh',   data:[], borderColor:'#ec4899', backgroundColor:'rgba(236,72,153,0.2)', fill:false, tension:0.4, pointRadius:3 },
+      { label:'Velodrome', data:[], borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.2)', fill:false, tension:0.4, pointRadius:3 },
     ]},
-    options:{
+    options: {
       responsive:true,
       scales:{
         x:{ ticks:{ color:'#cbd5e1' }, grid:{ color:'rgba(203,213,225,0.1)' } },
@@ -139,28 +158,27 @@
 
   // ─── Render UI ─────────────────────────────────────────────────────────────────
   function renderAll() {
-    const dataObj=load();
-    const dataArr=prepare(dataObj);
+    const dataObj = load();
+    const arr = prepare(dataObj);
 
     // Chart
-    chart.data.labels   = dataArr.map(d=>d.epoch);
-    chart.data.datasets[0].data = dataArr.map(d=>d.total.toFixed(2));
-    chart.data.datasets[1].data = dataArr.map(d=>d.pharaoh.toFixed(2));
-    chart.data.datasets[2].data = dataArr.map(d=>d.velodrome.toFixed(2));
+    chart.data.labels   = arr.map(d=>d.label);
+    chart.data.datasets[0].data = arr.map(d=>d.total.toFixed(2));
+    chart.data.datasets[1].data = arr.map(d=>d.pharaoh.toFixed(2));
+    chart.data.datasets[2].data = arr.map(d=>d.velodrome.toFixed(2));
     chart.update();
 
     // Epoch dropdown
-    const epochSel=document.getElementById('epochSelect');
-    epochSel.innerHTML = dataArr.map(d=>
-      `<option value="${d.epoch}">${d.epoch}</option>`
+    const sel = document.getElementById('epochSelect');
+    sel.innerHTML = arr.map(d =>
+      `<option value="${d.key}">${d.label}</option>`
     ).join('');
-    epochSel.value = fmt(epochStart(new Date()));
+    sel.value = keyFmt(epochStart(new Date()));
 
     // Table
-    const tbody=document.getElementById('divTable');
-    tbody.innerHTML = dataArr.map(d=>`
+    document.getElementById('divTable').innerHTML = arr.map(d => `
       <tr>
-        <td class="p-2">${d.epoch}</td>
+        <td class="p-2">${d.label}</td>
         <td class="p-2 text-right text-pink-400">${d.pharaoh.toFixed(2)}</td>
         <td class="p-2 text-right text-blue-400">${d.velodrome.toFixed(2)}</td>
         <td class="p-2 text-right font-semibold">${d.total.toFixed(2)}</td>
@@ -170,10 +188,12 @@
 
   // ─── Add / Update Handler ──────────────────────────────────────────────────────
   document.getElementById('addBtn').onclick = () => {
-    const epoch   = document.getElementById('epochSelect').value;
-    const crypto  = document.getElementById('cryptoSelect').value;
-    const amt     = parseFloat(document.getElementById('divAmount').value);
-    if(!epoch||!crypto||isNaN(amt)) return alert('Please select epoch, crypto & enter amount.');
+    const epoch = document.getElementById('epochSelect').value;
+    const crypto = document.getElementById('cryptoSelect').value;
+    const amt = parseFloat(document.getElementById('divAmount').value);
+    if (!epoch || !crypto || isNaN(amt)) {
+      return alert('Select Epoch, Crypto & enter a valid amount.');
+    }
     const dataObj = load();
     dataObj[epoch] ??= { pharaoh:0, velodrome:0 };
     dataObj[epoch][crypto] += amt;
