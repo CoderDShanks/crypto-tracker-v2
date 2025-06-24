@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Crypto Dividend Tracker</title>
+  <!-- Chart.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 1rem; }
+    .card { background:#f9f9f9; padding:1rem; margin-bottom:1rem; border-radius:8px; }
+    label, button { display:block; margin-top:0.5rem; }
+    input, select { width:100%; padding:0.5rem; margin-top:0.25rem; }
+  </style>
+</head>
+<body>
+
+  <h1>🚀 Crypto Dividend Tracker</h1>
+
+  <!-- 1. Live Price -->
+  <div class="card">
+    <h2>Live Price</h2>
+    <select id="symbol">
+      <option value="bitcoin">Bitcoin (BTC)</option>
+      <option value="ethereum">Ethereum (ETH)</option>
+      <!-- add more if you like -->
+    </select>
+    <p>Price: $<span id="price">—</span></p>
+    <button id="refreshPrice">Refresh Price</button>
+  </div>
+
+  <!-- 2. Record Dividend -->
+  <div class="card">
+    <h2>Add Dividend</h2>
+    <label>
+      Date
+      <input type="date" id="divDate" value="">
+    </label>
+    <label>
+      Amount (USD)
+      <input type="number" id="divAmount" step="0.01" placeholder="e.g. 10.50">
+    </label>
+    <button id="saveDiv">Save Dividend</button>
+  </div>
+
+  <!-- 3. Chart -->
+  <div class="card">
+    <h2>Weekly Dividends</h2>
+    <canvas id="chartDivs"></canvas>
+  </div>
+
+  <script>
+    // ——— Helpers ———
+    const COIN_API = 'https://api.coingecko.com/api/v3/simple/price';
+
+    function fetchPrice(symbol) {
+      document.getElementById('price').textContent = '…';
+      fetch(\`\${COIN_API}?ids=\${symbol}&vs_currencies=usd\`)
+        .then(r => r.json())
+        .then(d => {
+          document.getElementById('price').textContent = d[symbol].usd.toFixed(2);
+        })
+        .catch(_ => {
+          document.getElementById('price').textContent = 'Error';
+        });
+    }
+
+    function loadDividends() {
+      // Get from LocalStorage or empty array
+      return JSON.parse(localStorage.getItem('dividends') || '[]');
+    }
+    function saveDividends(arr) {
+      localStorage.setItem('dividends', JSON.stringify(arr));
+    }
+
+    function addDividend(date, amount) {
+      const arr = loadDividends();
+      arr.push({ date, amount: parseFloat(amount) });
+      saveDividends(arr);
+      drawChart();
+    }
+
+    function groupByWeek(divs) {
+      const weeks = {};
+      divs.forEach(d => {
+        const dt = new Date(d.date);
+        // get Monday of that week:
+        const day = dt.getDay(), diff = dt.getDate() - day + (day === 0 ? -6 : 1);
+        const mon = new Date(dt.setDate(diff));
+        const key = mon.toISOString().slice(0,10);
+        weeks[key] = (weeks[key] || 0) + d.amount;
+      });
+      return Object.entries(weeks)
+        .sort((a,b)=> a[0] < b[0] ? -1:1)
+        .map(([week, total])=> ({ week, total }));
+    }
+
+    // ——— Chart Setup ———
+    const ctx = document.getElementById('chartDivs').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: [], datasets: [{
+        label: 'USD per week',
+        data: [],
+        backgroundColor: 'rgba(0,123,255,0.5)'
+      }]},
+      options: { scales: { y: { beginAtZero: true } } }
+    });
+
+    function drawChart() {
+      const data = groupByWeek(loadDividends());
+      chart.data.labels = data.map(d=> d.week);
+      chart.data.datasets[0].data = data.map(d=> d.total);
+      chart.update();
+    }
+
+    // ——— Wire Up Buttons ———
+    document.getElementById('refreshPrice').onclick = () => {
+      const sym = document.getElementById('symbol').value;
+      fetchPrice(sym);
+    };
+    document.getElementById('saveDiv').onclick = () => {
+      const date = document.getElementById('divDate').value;
+      const amt  = document.getElementById('divAmount').value;
+      if (!date || !amt) return alert('Pick date & amount');
+      addDividend(date, amt);
+      document.getElementById('divAmount').value = '';
+    };
+
+    // ——— On Load ———
+    document.getElementById('divDate').value = new Date().toISOString().slice(0,10);
+    fetchPrice(document.getElementById('symbol').value);
+    drawChart();
+
+  </script>
+</body>
+</html>
