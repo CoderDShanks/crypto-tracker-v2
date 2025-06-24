@@ -2,202 +2,240 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Crypto Dividend Tracker</title>
-  <!-- Chart.js bundle -->
+  <title>Crypto Dividend Tracker - Luxury Edition</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" defer></script>
-  <!-- Luxury Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Raleway:wght@300;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Raleway:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    /* ── Full-screen Animated Gradient Background ───────────────────── */
+    /* ─── Base & Thematic Background ────────────────────────────────── */
+    :root {
+      --gold-primary: #D4AF37;
+      --gold-secondary: #FFD700;
+      --background-dark: #0d0b13;
+      --background-light: #1a1a23;
+      --text-light: #f0f0f0;
+      --text-muted: rgba(240, 240, 240, 0.6);
+    }
+
     html, body {
       height: 100%;
       margin: 0;
       padding: 0;
-      overflow: hidden;
-      background: linear-gradient(-45deg, #0d0b13, #1a1a23, #0d0b13, #1a1a23);
-      background-size: 400% 400%;
-      animation: bgWave 25s ease infinite;
+      overflow: hidden; /* Prevent scrollbars from layout shifts */
+      background: var(--background-dark);
       font-family: 'Raleway', sans-serif;
-      color: #fff;
+      color: var(--text-light);
     }
+
+    /* A more sophisticated, multi-layered animated background */
+    body::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(-45deg, var(--gold-primary), var(--background-dark), var(--background-light), #3b82f6, #ec4899);
+      background-size: 600% 600%;
+      animation: bgWave 30s ease infinite;
+      opacity: 0.15;
+      filter: blur(100px);
+    }
+
     @keyframes bgWave {
       0%   { background-position: 0% 50%; }
       50%  { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
+    
     .container {
       display: flex;
       flex-direction: column;
       height: 100%;
       padding: 1.5rem;
       box-sizing: border-box;
+      overflow-y: auto; /* Allow scrolling on small screens */
     }
 
-    /* ── Header ───────────────────────────────────────────────────── */
+    /* ─── Header & Typography ────────────────────────────────────────── */
     h1 {
       font-family: 'Playfair Display', serif;
-      font-size: 2.25rem;
+      font-size: 2.75rem;
       text-align: center;
-      margin-bottom: .5rem;
-      text-shadow: 0 0 6px rgba(0,0,0,0.8);
+      margin-bottom: .25rem;
+      color: var(--gold-secondary);
+      text-shadow: 0 0 10px rgba(212, 175, 55, 0.6), 0 0 20px rgba(212, 175, 55, 0.4);
+      animation: title-glow 3s infinite alternate;
     }
-    p.subtitle {
-      text-align: center;
-      color: rgba(255,255,255,0.7);
-      margin-bottom: 1rem;
+    
+    @keyframes title-glow {
+        from { text-shadow: 0 0 8px rgba(212,175,55,0.5), 0 0 16px rgba(212,175,55,0.3); }
+        to { text-shadow: 0 0 16px rgba(212,175,55,0.7), 0 0 32px rgba(212,175,55,0.5); }
     }
 
-    /* ── Glass Panel Base ──────────────────────────────────────────── */
+    p.subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      font-weight: 400;
+    }
+
+    /* ─── Glass Panel with Cursor Reflection ──────────────────────── */
     .glass {
       position: relative;
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(16px);
-      border: 2px solid rgba(212,175,55,0.8);
+      background: rgba(20, 20, 30, 0.5);
+      backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(212, 175, 55, 0.4);
       border-radius: 16px;
-      padding: 1rem 1.5rem;
+      padding: 1.5rem;
       margin-bottom: 1.25rem;
-      box-shadow:
-        0 8px 32px rgba(0,0,0,0.7),
-        0 0 20px rgba(212,175,55,0.5);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
       overflow: hidden;
-      transition: box-shadow .3s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      animation: panel-fade-in 0.8s ease-out forwards;
+      opacity: 0;
     }
-    .glass:hover {
-      box-shadow:
-        0 12px 48px rgba(0,0,0,0.9),
-        0 0 30px rgba(212,175,55,0.7);
+    
+    @keyframes panel-fade-in {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
+    
+    /* Delay animations for each panel */
+    #chartPanel { animation-delay: 0.2s; }
+    #controls { animation-delay: 0.4s; }
+    .glass:last-child { animation-delay: 0.6s; }
+
+    /* The cursor reflection effect */
     .glass::before {
       content: "";
       position: absolute;
-      top: -40%; left: -40%;
-      width: 180%; height: 180%;
-      background: radial-gradient(circle, rgba(255,255,255,0.3) 10%, transparent 60%);
-      transform: translateX(-100%) rotate(30deg);
-      transition: transform .8s ease, opacity .8s ease;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border-radius: inherit;
+      /* The gradient position is controlled by JS via CSS variables */
+      background: radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(212, 175, 55, 0.3), transparent 25%);
       opacity: 0;
-    }
-    .glass:hover::before {
-      transform: translateX(100%) rotate(30deg);
-      opacity: .2;
+      transition: opacity 0.4s ease;
+      pointer-events: none; /* Ignore mouse events */
     }
 
-    /* ── Chart Panel ───────────────────────────────────────────────── */
+    .glass:hover::before {
+      opacity: 1;
+    }
+
+    /* ─── Chart Panel ──────────────────────────────────────────────── */
     #chartPanel { flex: 0 0 auto; }
     #chartContainer { height: 240px; }
     canvas { width:100% !important; height:100% !important; }
 
-    /* ── Controls Panel ─────────────────────────────────────────────── */
-    #controls { flex: 0 0 auto; }
-    .row { display:flex; align-items:center; justify-content:center; }
-    .row.space { justify-content:flex-end; }
-    .spaced > * { margin:0 .3rem; }
-    .grid { display:flex; flex-wrap:wrap; gap:.5rem; }
+    /* ─── Controls & Inputs ────────────────────────────────────────── */
+    .row { display:flex; align-items:center; justify-content:center; gap: 0.5rem; }
+    .row.space { justify-content: flex-end; }
+    .grid { display:flex; flex-wrap:wrap; gap:.75rem; margin-top: 1rem;}
     .grid > * { flex:1; min-width:120px; }
 
-    /* ── Buttons & Inputs ─────────────────────────────────────────── */
     .btn {
-      background: linear-gradient(90deg,#D4AF37,#FFD700);
+      background: linear-gradient(125deg, var(--gold-primary), var(--gold-secondary));
       color: #0d0b13;
-      border: none; border-radius:8px;
-      padding:.6rem 1.2rem; font-size:1rem;
+      font-weight: 600;
+      border: none; border-radius:10px;
+      padding:.7rem 1.4rem; font-size:1rem;
       cursor:pointer;
-      box-shadow:
-        0 4px 16px rgba(0,0,0,0.5),
-        0 0 8px rgba(212,175,55,0.7);
-      transition: transform .1s, box-shadow .2s;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 -2px 4px rgba(0,0,0,0.2);
+      transition: transform .2s ease, box-shadow .2s ease;
     }
     .btn:hover {
-      box-shadow:
-        0 6px 24px rgba(0,0,0,0.7),
-        0 0 12px rgba(212,175,55,0.9);
+      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4), inset 0 -2px 4px rgba(0,0,0,0.2);
+      transform: translateY(-2px);
     }
-    .btn:active { transform: scale(.95); }
+    .btn:active { transform: translateY(0) scale(.97); }
 
     .circle-btn {
       width:44px; height:44px;
-      background: rgba(255,255,255,0.15);
-      color:#fff; border:2px solid rgba(212,175,55,0.8);
-      border-radius:50%; font-size:1.2rem; cursor:pointer;
-      box-shadow:
-        0 2px 12px rgba(0,0,0,0.6),
-        0 0 6px rgba(212,175,55,0.5);
-      transition: background .2s, transform .1s, box-shadow .2s;
-      margin:0 .25rem;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-light);
+      border:1px solid rgba(212,175,55,0.5);
+      border-radius:50%; font-size:1.4rem; cursor:pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      transition: all .2s ease;
     }
     .circle-btn:hover {
-      background: rgba(255,255,255,0.25);
-      box-shadow:
-        0 4px 16px rgba(0,0,0,0.7),
-        0 0 8px rgba(212,175,55,0.7);
+      background: rgba(212, 175, 55, 0.2);
+      border-color: rgba(212, 175, 55, 0.8);
+      transform: translateY(-2px);
     }
-    .circle-btn:active { transform: scale(.9); }
+    .circle-btn:active { transform: translateY(0) scale(.9); }
+    .circle-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
     select, input[type=number] {
-      width:100%; padding:.6rem; margin:.4rem 0;
-      background: rgba(255,255,255,0.15);
-      border:2px solid rgba(212,175,55,0.8);
-      border-radius:8px; color:#fff; font-size:1rem;
-      box-shadow:0 2px 8px rgba(0,0,0,0.6);
+      width:100%; padding:.7rem;
+      background: rgba(0,0,0, 0.3);
+      border:1px solid rgba(212,175,55,0.5);
+      border-radius:10px; color:var(--text-light); font-size:1rem;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
+      transition: border-color 0.3s, box-shadow 0.3s;
     }
-    select {
-      appearance:none;
-      background-image:url("data:image/svg+xml,%3Csvg fill='white' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath d='M2 5L0 0h4z'/%3E%3C/svg%3E");
-      background-repeat:no-repeat;
-      background-position:right 12px center;
-      background-size:10px;
+    select:focus, input:focus {
+        outline: none;
+        border-color: var(--gold-primary);
+        box-shadow: inset 0 2px 8px rgba(0,0,0,0.4), 0 0 10px rgba(212, 175, 55, 0.5);
     }
 
-    /* ── Table ─────────────────────────────────────────────────────── */
+    select {
+      appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg fill='white' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 12L2 6h12z'/%3E%3C/svg%3E");
+      background-repeat:no-repeat;
+      background-position:right 1rem center;
+      background-size:12px;
+    }
+
+    /* ─── Table ────────────────────────────────────────────────────── */
     table {
       width:100%; border-collapse:collapse; margin-top:.75rem;
-      font-family:'Raleway',sans-serif; font-size:.9rem;
     }
     th, td {
-      padding:.6rem 1rem; border-bottom:1px solid rgba(255,255,255,0.2);
+      padding:.8rem 1.2rem; border-bottom:1px solid rgba(212, 175, 55, 0.2);
+      text-align: right;
     }
-    th { text-align:left; color:rgba(255,255,255,0.7); }
-    td { text-align:right; }
-    td:first-child { text-align:left; }
+    th { text-align:left; color:var(--text-muted); font-weight: 400; }
+    td:first-child, th:first-child { text-align:left; }
+    tbody tr { transition: background-color 0.3s ease; }
+    tbody tr:hover { background-color: rgba(212, 175, 55, 0.08); }
+    
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Crypto Dividend Tracker</h1>
-    <p class="subtitle">Luxurious wave-animated gradient & gold-edged glass UI</p>
+    <p class="subtitle">Monitor weekly earnings with an unparalleled user experience.</p>
 
-    <!-- Dividend Performance (Bar Chart) -->
     <div id="chartPanel" class="glass">
       <h2>Dividend Performance</h2>
       <div id="chartContainer"><canvas id="chart"></canvas></div>
     </div>
 
-    <!-- Controls Panel -->
     <div id="controls" class="glass">
-      <div class="row space spaced">
-        <button id="delPrev" class="circle-btn">−</button>
-        <button id="addPrev" class="circle-btn">＋</button>
-        <button id="addNext" class="circle-btn">＋</button>
-        <button id="delNext" class="circle-btn">−</button>
+      <div class="row space">
+        <button id="delPrev" class="circle-btn" title="Delete Earliest Epoch">−</button>
+        <button id="addPrev" class="circle-btn" title="Add Earlier Epoch">＋</button>
+        <button id="addNext" class="circle-btn" title="Add Later Epoch">＋</button>
+        <button id="delNext" class="circle-btn" title="Delete Latest Epoch">−</button>
       </div>
-      <div class="row spaced" style="margin:1rem 0;">
+      <div class="row" style="margin:1rem 0;">
         <button id="prev" class="circle-btn">&lt;</button>
-        <span id="epochNum" style="font-size:1.2rem;">Epoch #1</span>
+        <span id="epochNum" style="font-size:1.4rem; font-weight:600; flex-grow:1; text-align:center;">Epoch #1</span>
         <button id="next" class="circle-btn">&gt;</button>
       </div>
-      <div id="epochRange" style="text-align:center;opacity:.8;margin-bottom:1rem;">Loading…</div>
+      <div id="epochRange" style="text-align:center;color:var(--text-muted);margin-bottom:1rem;">Loading…</div>
       <div class="grid">
         <select id="crypto">
           <option value="">Choose Crypto</option>
           <option value="pharaoh">Pharaoh</option>
           <option value="velodrome">Velodrome</option>
         </select>
-        <input id="amount" type="number" placeholder="Amount USD"/>
+        <input id="amount" type="number" placeholder="Amount (USD)"/>
         <button id="addBtn" class="btn">Add / Update</button>
       </div>
     </div>
 
-    <!-- Table Panel -->
     <div class="glass">
       <table>
         <thead>
@@ -210,6 +248,9 @@
 
   <script>
   window.onload = function() {
+    // =================================================================
+    // CORE APPLICATION LOGIC (Unchanged)
+    // =================================================================
     const STORAGE = 'divTrackerLux';
     const loadData = () => JSON.parse(localStorage.getItem(STORAGE)||'{}');
     const saveData = d => localStorage.setItem(STORAGE, JSON.stringify(d));
@@ -223,7 +264,7 @@
     function labelFmt(s) {
       const e = new Date(s); e.setDate(s.getDate()+6);
       const o={month:'short',day:'numeric'};
-      return `${s.toLocaleDateString(undefined,o)}–${e.toLocaleDateString(undefined,o)}, ${e.getFullYear()}`;
+      return `${s.toLocaleDateString(undefined,o)} – ${e.toLocaleDateString(undefined,o)}, ${e.getFullYear()}`;
     }
 
     let epochs = (() => {
@@ -239,11 +280,11 @@
     const chart = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: [], 
+        labels: [],
         datasets: [
-          { label: 'Total',     data: [], backgroundColor:'rgba(212,175,55,0.6)', borderColor:'#D4AF37', borderWidth:1 },
-          { label: 'Pharaoh',   data: [], backgroundColor:'rgba(236,72,153,0.6)', borderColor:'#ec4899', borderWidth:1 },
-          { label: 'Velodrome', data: [], backgroundColor:'rgba(59,130,246,0.6)', borderColor:'#3b82f6', borderWidth:1 }
+          { label: 'Total',     data: [], backgroundColor:'rgba(212,175,55,0.7)', borderColor: 'var(--gold-primary)', borderWidth:1 },
+          { label: 'Pharaoh',   data: [], backgroundColor:'rgba(236,72,153,0.7)', borderColor: '#ec4899', borderWidth:1 },
+          { label: 'Velodrome', data: [], backgroundColor:'rgba(59,130,246,0.7)', borderColor: '#3b82f6', borderWidth:1 }
         ]
       },
       options: {
@@ -251,12 +292,12 @@
         maintainAspectRatio: false,
         layout: { padding: 8 },
         scales: {
-          x: { title: { display: true, text: 'Epoch #', color: '#D4AF37' }, ticks: { color: '#D4AF37' }, grid: { display: false } },
-          y: { beginAtZero: true, title: { display: true, text: 'Dividends (USD)', color: '#D4AF37' }, ticks: { color: '#D4AF37' }, grid: { color: 'rgba(212,175,55,0.2)' } }
+          x: { title: { display: false }, ticks: { color: 'var(--text-muted)', font: { family: "'Raleway', sans-serif" } }, grid: { display: false } },
+          y: { beginAtZero: true, title: { display: true, text: 'Dividends (USD)', color: 'var(--text-muted)' }, ticks: { color: 'var(--text-muted)' }, grid: { color: 'rgba(212,175,55,0.15)' } }
         },
         plugins: {
-          tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', titleColor: '#FFD700', bodyColor: '#fff', callbacks: { title: ctx => prepare()[ctx[0].dataIndex].label } },
-          legend: { labels: { color: '#FFD700' } }
+          tooltip: { backgroundColor: 'rgba(10,10,10,0.8)', titleFont: { size: 14, family: "'Playfair Display', serif" }, bodyFont: { family: "'Raleway', sans-serif" }, titleColor: 'var(--gold-secondary)', bodyColor: 'var(--text-light)', callbacks: { title: ctx => prepare()[ctx[0].dataIndex].label }, padding: 12, cornerRadius: 8 },
+          legend: { labels: { color: 'var(--text-light)', font: { family: "'Raleway', sans-serif" } } }
         }
       }
     });
@@ -271,7 +312,7 @@
 
     function render() {
       const arr = prepare();
-      chart.data.labels = arr.map(x => x.idx);
+      chart.data.labels = arr.map(x => `Epoch ${x.idx}`);
       chart.data.datasets[0].data = arr.map(x => x.total);
       chart.data.datasets[1].data = arr.map(x => x.pharaoh);
       chart.data.datasets[2].data = arr.map(x => x.velodrome);
@@ -281,15 +322,17 @@
       document.getElementById('epochRange').textContent = arr[current].label;
       document.getElementById('prev').disabled = (current === 0);
       document.getElementById('next').disabled = (current === arr.length-1);
-
+      
+      const formatCurrency = (num) => `$${num.toFixed(2)}`;
+      
       document.getElementById('tableBody').innerHTML = arr.map(x => `
         <tr>
           <td>${x.idx}</td>
-          <td style="color:#ec4899;">${x.pharaoh.toFixed(2)}</td>
-          <td style="color:#3b82f6;">${x.velodrome.toFixed(2)}</td>
-          <td style="font-weight:600;">${x.total.toFixed(2)}</td>
+          <td style="color:#ec4899;">${formatCurrency(x.pharaoh)}</td>
+          <td style="color:#3b82f6;">${formatCurrency(x.velodrome)}</td>
+          <td style="font-weight:600; color: var(--gold-primary);">${formatCurrency(x.total)}</td>
         </tr>
-      `).join('');
+      `).reverse().join(''); // Show latest first in table
     }
 
     // Controls
@@ -302,13 +345,28 @@
     document.getElementById('addBtn').onclick  = () => {
       const c = document.getElementById('crypto').value;
       const a = parseFloat(document.getElementById('amount').value);
-      if(!c||isNaN(a)) return alert('Select a crypto & enter valid amount.');
+      if(!c||isNaN(a)) return alert('Please select a crypto and enter a valid amount.');
       let d = loadData(), k=epochs[current];
       d[k] = d[k]||{pharaoh:0,velodrome:0};
-      d[k][c] += a; saveData(d); document.getElementById('amount').value=''; render();
+      d[k][c] = a; // Changed from += to = for direct update
+      saveData(d); document.getElementById('amount').value=''; render();
     };
 
     render();
+
+    // =================================================================
+    // NEW UI ENHANCEMENT: Cursor Reflection Effect
+    // =================================================================
+    const glassPanels = document.querySelectorAll('.glass');
+    glassPanels.forEach(panel => {
+      panel.addEventListener('mousemove', e => {
+        const rect = panel.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        panel.style.setProperty('--mouse-x', `${x}px`);
+        panel.style.setProperty('--mouse-y', `${y}px`);
+      });
+    });
   };
   </script>
 </body>
