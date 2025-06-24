@@ -1,58 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <title>Crypto Dividend Tracker</title>
-  <!-- Tailwind CDN -->
+  <!-- TailwindCSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&family=Plus+Jakarta+Sans:wght@300;500&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-900 text-gray-100 font-[PlusJakartaSans] min-h-screen p-6">
-
-  <!-- Logo Row -->
-  <div class="flex justify-center space-x-12 mb-6">
-    <img src="pharaoh-logo.png" alt="Pharaoh Logo" class="h-16 drop-shadow-lg"/>
-    <img src="velodrome-logo.png" alt="Velodrome Logo" class="h-16 drop-shadow-lg"/>
-  </div>
+<body class="bg-[#0d0b13] text-gray-100 font-[PlusJakartaSans] min-h-screen p-8
+             bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.05),_transparent_70%)]">
 
   <!-- Title -->
-  <h1 class="text-4xl font-[Inter] text-center text-white mb-2">Crypto Dividend Tracker</h1>
-  <p class="text-center text-gray-400 mb-8">Track your earnings across epochs with a modern glass look</p>
+  <h1 class="text-5xl font-[Inter] text-center text-white drop-shadow-lg mb-2">
+    Crypto Dividend Tracker
+  </h1>
+  <p class="text-center text-gray-400 mb-12">
+    Track your earnings across epochs with a cutting-edge glass UI
+  </p>
 
-  <!-- Chart Section -->
-  <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8 shadow-lg">
+  <!-- Dividend Performance Chart -->
+  <div class="relative bg-white/5 backdrop-blur-lg rounded-2xl p-8 mb-12 overflow-hidden transition-shadow hover:shadow-2xl">
+    <!-- glass shine -->
+    <div class="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 hover:opacity-30 transition-opacity duration-700 transform -translate-x-full rotate-12"></div>
     <h2 class="text-2xl font-semibold text-white mb-4">Dividend Performance</h2>
     <canvas id="divChart" class="w-full h-64"></canvas>
   </div>
 
-  <!-- Controls Section -->
-  <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8 shadow-lg space-y-6">
-
-    <!-- Add/Remove Epoch Buttons -->
-    <div class="flex justify-end space-x-2">
-      <button id="deletePrevEpoch" class="w-10 h-10 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">−</button>
-      <button id="addPrevEpoch"    class="w-10 h-10 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">＋</button>
-      <button id="addNextEpoch"    class="w-10 h-10 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">＋</button>
-      <button id="deleteNextEpoch" class="w-10 h-10 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">−</button>
+  <!-- Controls Panel -->
+  <div class="relative bg-white/5 backdrop-blur-lg rounded-2xl p-8 mb-12 overflow-hidden transition-shadow hover:shadow-2xl">
+    <div class="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 hover:opacity-30 transition-opacity duration-700 transform -translate-x-full rotate-12"></div>
+    <!-- add/remove epochs -->
+    <div class="flex justify-end space-x-3 mb-4">
+      <button id="deletePrevEpoch" class="w-12 h-12 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">−</button>
+      <button id="addPrevEpoch"    class="w-12 h-12 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">＋</button>
+      <button id="addNextEpoch"    class="w-12 h-12 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">＋</button>
+      <button id="deleteNextEpoch" class="w-12 h-12 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">−</button>
     </div>
-
-    <!-- Navigator -->
-    <div class="flex justify-center items-center space-x-4">
-      <button id="prevEpoch" class="w-10 h-10 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">&lt;</button>
-      <div id="epochNumber" class="text-xl font-medium">Epoch #1</div>
-      <button id="nextEpoch" class="w-10 h-10 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">&gt;</button>
+    <!-- navigate epochs -->
+    <div class="flex justify-center items-center space-x-6 mb-2">
+      <button id="prevEpoch" class="w-12 h-12 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">&lt;</button>
+      <div id="epochNumber" class="text-2xl font-medium text-white">Epoch #1</div>
+      <button id="nextEpoch" class="w-12 h-12 bg-white/20 hover:bg-white/30 text-white rounded-full shadow-md">&gt;</button>
     </div>
-    <div id="epochRange" class="text-center text-gray-300 italic">Loading…</div>
-
-    <!-- Entry Form -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+    <div id="epochRange" class="text-center text-gray-300 italic mb-6">Loading…</div>
+    <!-- data entry -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
       <div>
         <label class="block mb-1 text-gray-300">Select Crypto</label>
         <select id="cryptoSelect"
-          class="w-full bg-white/20 border border-white/30 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500">
+                class="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-2 
+                       text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500">
           <option value="" disabled selected>Choose…</option>
           <option value="pharaoh">Pharaoh</option>
           <option value="velodrome">Velodrome</option>
@@ -61,24 +61,27 @@
       <div class="md:col-span-2">
         <label class="block mb-1 text-gray-300">USD Amount</label>
         <input id="divAmount" type="number" step="0.01" placeholder="e.g. 12.50"
-          class="w-full bg-white/20 border border-white/30 text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500"/>
+               class="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-2 
+                      text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"/>
       </div>
       <button id="addBtn"
-        class="col-span-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg px-6 py-2 font-semibold shadow-lg hover:shadow-2xl">
+              class="bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-full 
+                     px-8 py-3 font-semibold shadow-lg hover:shadow-2xl">
         Add / Update
       </button>
     </div>
   </div>
 
-  <!-- Table Section -->
-  <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-4 shadow-lg overflow-x-auto">
+  <!-- Epoch Table -->
+  <div class="relative bg-white/5 backdrop-blur-lg rounded-2xl p-6 overflow-x-auto transition-shadow hover:shadow-2xl">
+    <div class="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 hover:opacity-30 transition-opacity duration-700 transform -translate-x-full rotate-12"></div>
     <table class="w-full text-sm">
       <thead class="text-gray-400">
         <tr>
-          <th class="p-2 text-left">Epoch #</th>
-          <th class="p-2 text-right">Pharaoh</th>
-          <th class="p-2 text-right">Velodrome</th>
-          <th class="p-2 text-right">Total</th>
+          <th class="p-3 text-left">Epoch #</th>
+          <th class="p-3 text-right">Pharaoh</th>
+          <th class="p-3 text-right">Velodrome</th>
+          <th class="p-3 text-right">Total</th>
         </tr>
       </thead>
       <tbody id="divTable"></tbody>
@@ -87,58 +90,58 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Storage helpers
-    const KEY = 'dividends';
-    const load = () => JSON.parse(localStorage.getItem(KEY) || '{}');
-    const save = v => localStorage.setItem(KEY, JSON.stringify(v));
+    const STORAGE = 'dividends';
+    const load = () => JSON.parse(localStorage.getItem(STORAGE) || '{}');
+    const save = v => localStorage.setItem(STORAGE, JSON.stringify(v));
 
-    // Epoch logic
+    // epoch helpers
     const epochStart = d => {
-      const day = d.getDay(), diff = day >=4 ? day-4 : day+3;
+      const day = d.getDay(), diff = day>=4 ? day-4 : day+3;
       const s = new Date(d); s.setDate(d.getDate()-diff);
       return new Date(s.getFullYear(), s.getMonth(), s.getDate());
     };
-    const keyFmt = d => d.toISOString().slice(0,10);
-    const labelFmt = s => {
+    const fmtKey = d => d.toISOString().slice(0,10);
+    const fmtLabel = s => {
       const e = new Date(s); e.setDate(s.getDate()+6);
-      const o = { month:'short', day:'numeric' };
+      const o={month:'short',day:'numeric'};
       return `${s.toLocaleDateString(undefined,o)}–${e.toLocaleDateString(undefined,o)}, ${e.getFullYear()}`;
     };
 
-    // Init epoch list
-    let keys = (() => {
-      const d = load(), arr = Object.keys(d);
-      const curr = keyFmt(epochStart(new Date()));
-      if (!arr.includes(curr)) arr.push(curr);
-      return arr.sort();
+    // init epoch list
+    let epochs = (() => {
+      const d = load(), keys = Object.keys(d);
+      const cur = fmtKey(epochStart(new Date()));
+      if (!keys.includes(cur)) keys.push(cur);
+      return keys.sort();
     })();
 
-    let current = keys.indexOf(keyFmt(epochStart(new Date())));
+    let current = epochs.indexOf(fmtKey(epochStart(new Date())));
 
-    // Chart.js setup
+    // prepare data array
+    const prepare = () => {
+      const data = load();
+      return epochs.sort().map((k,i)=>{
+        const v = data[k] || {pharaoh:0,velodrome:0};
+        return { key:k, idx:i+1, label: fmtLabel(new Date(k)), pharaoh:v.pharaoh, velodrome:v.velodrome, total:v.pharaoh+v.velodrome };
+      });
+    };
+
+    // Chart.js rendering
     const ctx = document.getElementById('divChart').getContext('2d');
     const chart = new Chart(ctx, {
       type:'line',
       data:{ labels:[], datasets:[
-        { label:'Total', data:[], borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,0.2)', fill:true, tension:0.4, pointRadius:4 },
-        { label:'Pharaoh', data:[], borderColor:'#ec4899', backgroundColor:'rgba(236,72,153,0.2)', fill:false, tension:0.4, pointRadius:3 },
+        { label:'Total',     data:[], borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,0.2)', fill:true, tension:0.4, pointRadius:4 },
+        { label:'Pharaoh',   data:[], borderColor:'#ec4899', backgroundColor:'rgba(236,72,153,0.2)', fill:false, tension:0.4, pointRadius:3 },
         { label:'Velodrome', data:[], borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.2)', fill:false, tension:0.4, pointRadius:3 }
       ]]},
       options:{ responsive:true, scales:{
         x:{ title:{display:true,text:'Epoch #'}, ticks:{color:'#cbd5e1',callback:v=>'#'+v}, grid:{color:'rgba(203,213,225,0.1)'} },
         y:{ ticks:{color:'#cbd5e1'}, grid:{color:'rgba(203,213,225,0.1)'}, beginAtZero:true }
-      }, plugins:{ tooltip:{ callbacks:{ title(ctx){ return prepare()[ctx[0].dataIndex].label; }}}, legend:{ labels:{color:'#f8fafc'} } } }
+      }, plugins:{ tooltip:{ callbacks:{ title:ctx=>prepare()[ctx[0].dataIndex].label }}, legend:{ labels:{color:'#f8fafc'} } } }
     });
 
-    function prepare(){
-      const data = load();
-      return [...keys].sort().map((k,i)=> {
-        const v = data[k] || {pharaoh:0,velodrome:0};
-        return { key:k, idx:i+1, label:labelFmt(new Date(k)), pharaoh:v.pharaoh, velodrome:v.velodrome, total:v.pharaoh+v.velodrome };
-      });
-    }
-
-    function render(){
+    function render() {
       const arr = prepare();
       chart.data.labels = arr.map(d=>d.idx);
       chart.data.datasets[0].data = arr.map(d=>d.total.toFixed(2));
@@ -146,38 +149,41 @@
       chart.data.datasets[2].data = arr.map(d=>d.velodrome.toFixed(2));
       chart.update();
 
+      // UI updates
       document.getElementById('epochNumber').textContent = `Epoch #${arr[current].idx}`;
       document.getElementById('epochRange').textContent  = arr[current].label;
-      document.getElementById('prevEpoch').disabled = current===0;
-      document.getElementById('nextEpoch').disabled = current===arr.length-1;
+      document.getElementById('prevEpoch').disabled     = current === 0;
+      document.getElementById('nextEpoch').disabled     = current === arr.length-1;
 
+      // table
       document.getElementById('divTable').innerHTML = arr.map(d=>`
         <tr>
-          <td class="p-2">#${d.idx}</td>
-          <td class="p-2 text-right text-pink-400">${d.pharaoh.toFixed(2)}</td>
-          <td class="p-2 text-right text-blue-400">${d.velodrome.toFixed(2)}</td>
-          <td class="p-2 text-right font-semibold">${d.total.toFixed(2)}</td>
+          <td class="p-3">#${d.idx}</td>
+          <td class="p-3 text-right text-pink-400">${d.pharaoh.toFixed(2)}</td>
+          <td class="p-3 text-right text-blue-400">${d.velodrome.toFixed(2)}</td>
+          <td class="p-3 text-right font-semibold">${d.total.toFixed(2)}</td>
         </tr>
       `).join('');
     }
 
-    // Epoch controls
-    document.getElementById('addPrevEpoch').onclick    = ()=>{ const d=new Date(keys[0]); d.setDate(d.getDate()-7); const k=keyFmt(d); keys.unshift(k); current=0; render(); };
-    document.getElementById('deletePrevEpoch').onclick = ()=>{ if(keys.length>1){ keys.shift(); if(current>0) current--; render(); } };
-    document.getElementById('addNextEpoch').onclick    = ()=>{ const d=new Date(keys[keys.length-1]); d.setDate(d.getDate()+7); const k=keyFmt(d); keys.push(k); current=keys.length-1; render(); };
-    document.getElementById('deleteNextEpoch').onclick = ()=>{ if(keys.length>1){ keys.pop(); if(current>=keys.length) current=keys.length-1; render(); } };
+    // epoch controls
+    document.getElementById('addPrevEpoch').onclick    = ()=>{ const d=new Date(epochs[0]); d.setDate(d.getDate()-7); epochs.unshift(fmtKey(d)); current=0; render(); };
+    document.getElementById('deletePrevEpoch').onclick = ()=>{ if(epochs.length>1){ epochs.shift(); if(current>0) current--; render(); } };
+    document.getElementById('addNextEpoch').onclick    = ()=>{ const d=new Date(epochs[epochs.length-1]); d.setDate(d.getDate()+7); epochs.push(fmtKey(d)); current=epochs.length-1; render(); };
+    document.getElementById('deleteNextEpoch').onclick = ()=>{ if(epochs.length>1){ epochs.pop(); if(current>=epochs.length) current=epochs.length-1; render(); } };
     document.getElementById('prevEpoch').onclick       = ()=>{ if(current>0) current--; render(); };
-    document.getElementById('nextEpoch').onclick       = ()=>{ if(current<keys.length-1) current++; render(); };
+    document.getElementById('nextEpoch').onclick       = ()=>{ if(current<epochs.length-1) current++; render(); };
 
-    // Add dividend
+    // add/update dividend
     document.getElementById('addBtn').onclick = ()=> {
-      const c = document.getElementById('cryptoSelect').value;
-      const a = parseFloat(document.getElementById('divAmount').value);
-      if(!c||isNaN(a)) return alert('Select crypto & enter valid amount');
-      const k = keys[current], d=load();
-      d[k] ??= {pharaoh:0,velodrome:0};
-      d[k][c] += a;
-      save(d);
+      const crypto = document.getElementById('cryptoSelect').value;
+      const amt = parseFloat(document.getElementById('divAmount').value);
+      if(!crypto||isNaN(amt)) return alert('Select crypto & enter a valid amount.');
+      const key = epochs[current];
+      const data = load();
+      data[key] ??= {pharaoh:0,velodrome:0};
+      data[key][crypto] += amt;
+      save(data);
       document.getElementById('divAmount').value = '';
       render();
     };
