@@ -2,68 +2,81 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Crypto Dividend Tracker</title>
+  <title>Neon Crypto Dividend Tracker</title>
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Tailwind & Inter font -->
+  <!-- TailwindCSS & Custom Fonts -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', sans-serif; }
-    /* Neon glow accents */
-    .neon-pink { background-color: #e11d48; }
-    .neon-pink:hover { background-color: #f43f5e; }
-    .neon-blue { background-color: #3b82f6; }
-    .neon-blue:hover { background-color: #60a5fa; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #1a1a1f, #16161a);
+      color: #e5e7eb;
+      min-height: 100vh;
+    }
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      color: #f472b6;
+      text-shadow: 0 0 6px #f472b6, 0 0 12px #f472b6;
+    }
+    .glass {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn-neon {
+      background: #ec4899;
+      box-shadow: 0 0 8px #ec4899, 0 0 16px #ec4899;
+    }
+    .btn-neon:hover {
+      background: #f472b6;
+      box-shadow: 0 0 12px #f472b6, 0 0 24px #f472b6;
+    }
+    .neon-blue {
+      background: #3b82f6;
+      box-shadow: 0 0 8px #3b82f6, 0 0 16px #3b82f6;
+    }
+    .neon-blue:hover {
+      background: #60a5fa;
+      box-shadow: 0 0 12px #60a5fa, 0 0 24px #60a5fa;
+    }
   </style>
 </head>
-<body class="bg-gray-900 text-gray-100">
-  <div class="max-w-4xl mx-auto p-6 space-y-6">
-    <h1 class="text-4xl font-semibold text-center text-white">📊 Weekly Epoch Dividends</h1>
+<body>
+  <div class="max-w-3xl mx-auto p-6 space-y-8">
+    <!-- HEADER -->
+    <h1 class="text-4xl text-center">🚀 Neon Epoch Dividends</h1>
 
-    <!-- Chart Card -->
-    <div class="bg-gray-800 rounded-2xl shadow-lg p-4">
+    <!-- CHART CARD -->
+    <div class="glass rounded-2xl p-4 shadow-lg">
       <canvas id="dividendChart"></canvas>
     </div>
 
-    <!-- Entry Form -->
-    <div class="bg-gray-800 rounded-2xl shadow-lg p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div>
-        <label class="block mb-1 font-medium">Crypto</label>
-        <select id="cryptoSelect"
-                class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white">
-          <option value="" disabled selected>Select…</option>
+    <!-- ENTRY FORM -->
+    <div class="glass rounded-2xl p-6 space-y-4 shadow-lg">
+      <div id="epochDisplay" class="text-center text-sm tracking-wide"></div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <select id="cryptoSelect" class="p-2 bg-transparent border border-gray-600 rounded text-gray-100">
+          <option value="" disabled selected>Choose Crypto</option>
           <option value="pharaoh">Pharaoh</option>
-          <option value="velodrome">Velodrome Finance</option>
+          <option value="velodrome">Velodrome</option>
         </select>
-      </div>
-      <div>
-        <label class="block mb-1 font-medium">Date</label>
-        <input type="date" id="divDate"
-               class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white" />
-      </div>
-      <div class="md:col-span-2">
-        <label class="block mb-1 font-medium">Amount (USD)</label>
-        <div class="flex space-x-2">
-          <input type="number" id="divAmount" step="0.01" placeholder="e.g. 12.34"
-                 class="flex-1 p-2 bg-gray-700 border border-gray-600 rounded text-white" />
-          <button id="addBtn"
-                  class="neon-pink text-white px-4 rounded font-semibold">
-            Add
-          </button>
-        </div>
+        <input type="number" id="divAmount" placeholder="Amount (USD)"
+               class="p-2 bg-transparent border border-gray-600 rounded text-gray-100"/>
+        <button id="addBtn" class="btn-neon text-white font-semibold rounded">Add</button>
       </div>
     </div>
 
-    <!-- Table Card -->
-    <div class="bg-gray-800 rounded-2xl shadow-lg p-4 overflow-x-auto">
-      <table class="w-full table-auto text-sm">
-        <thead class="bg-gray-700">
+    <!-- TABLE CARD -->
+    <div class="glass rounded-2xl p-4 overflow-auto shadow-lg">
+      <table class="w-full text-sm">
+        <thead>
           <tr>
-            <th class="p-2 text-left text-gray-300">Epoch Start</th>
-            <th class="p-2 text-right text-gray-300">Pharaoh ($)</th>
-            <th class="p-2 text-right text-gray-300">Velodrome ($)</th>
-            <th class="p-2 text-right text-gray-300">Total ($)</th>
+            <th class="pb-2 text-left">Epoch Start</th>
+            <th class="pb-2 text-right">Pharaoh</th>
+            <th class="pb-2 text-right">Velodrome</th>
+            <th class="pb-2 text-right">Total</th>
           </tr>
         </thead>
         <tbody id="dividendTable"></tbody>
@@ -72,5 +85,98 @@
   </div>
 
   <script>
-  // ——— LocalStorage Helpers ———
-  const LS_KEY =_
+    // ─── UTILITIES ──────────────────────────────────────────────────────────────
+    const LS_KEY = 'dividends_v4';
+    const load = () => JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+    const save = arr => localStorage.setItem(LS_KEY, JSON.stringify(arr));
+
+    // compute the Thursday→Wednesday epoch start date for a given Date()
+    function getEpochStart(d) {
+      const day = d.getDay(); // 0=Sun … 4=Thu … 6=Sat
+      const offset = day >= 4 ? day - 4 : day + 3;
+      const start = new Date(d);
+      start.setDate(d.getDate() - offset);
+      return new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    }
+
+    // format YYYY-MM-DD
+    const fmt = d => d.toISOString().slice(0,10);
+
+    function group(divs) {
+      const map = {};
+      divs.forEach(({ epoch, crypto, amount }) => {
+        map[epoch] ??= { pharaoh:0, velodrome:0 };
+        map[epoch][crypto] += amount;
+      });
+      return Object.entries(map)
+        .sort(([a],[b]) => a < b ? -1 : 1)
+        .map(([e,v]) => ({
+          epoch: e,
+          pharaoh: v.pharaoh,
+          velodrome: v.velodrome,
+          total: v.pharaoh+v.velodrome
+        }));
+    }
+
+    // ─── CHART.JS INIT ───────────────────────────────────────────────────────────
+    const ctx = document.getElementById('dividendChart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: [], datasets: [
+        { label: 'Pharaoh',    data: [], backgroundColor: 'rgba(235,65,110,0.8)' },
+        { label: 'Velodrome', data: [], backgroundColor: 'rgba(44,120,246,0.8)' }
+      ]},
+      options: {
+        responsive: true,
+        scales: { x:{ stacked:true, ticks:{ color:'#ccc' } }, y:{ stacked:true, beginAtZero:true, ticks:{ color:'#ccc' } } },
+        plugins:{ legend:{ labels:{ color:'#ccc' } } }
+      }
+    });
+
+    // ─── RENDER UI ─────────────────────────────────────────────────────────────
+    function render() {
+      const data = group(load());
+      // Chart
+      chart.data.labels = data.map(d=>d.epoch);
+      chart.data.datasets[0].data = data.map(d=>d.pharaoh.toFixed(2));
+      chart.data.datasets[1].data = data.map(d=>d.velodrome.toFixed(2));
+      chart.update();
+      // Table
+      const tbody = document.getElementById('dividendTable');
+      tbody.innerHTML = '';
+      data.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="py-1">${d.epoch}</td>
+          <td class="py-1 text-right text-pink-400">${d.pharaoh.toFixed(2)}</td>
+          <td class="py-1 text-right text-blue-400">${d.velodrome.toFixed(2)}</td>
+          <td class="py-1 text-right font-semibold">${d.total.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ─── INITIAL SETUP & EVENTS ─────────────────────────────────────────────────
+    const today = new Date();
+    const start = getEpochStart(today);
+    const end   = new Date(start);
+    end.setDate(start.getDate() + 6);
+    document.getElementById('epochDisplay').textContent =
+      `Epoch: ${fmt(start)} → ${fmt(end)}`;
+
+    document.getElementById('addBtn').onclick = () => {
+      const crypto = document.getElementById('cryptoSelect').value;
+      const amt    = parseFloat(document.getElementById('divAmount').value);
+      if (!crypto || isNaN(amt)) return alert('Choose crypto & enter a valid amount.');
+      const arr = load();
+      arr.push({ epoch: fmt(start), crypto, amount: amt });
+      save(arr);
+      render();
+      document.getElementById('divAmount').value = '';
+    };
+
+    // render existing data on load
+    render();
+  </script>
+</body>
+</html>
