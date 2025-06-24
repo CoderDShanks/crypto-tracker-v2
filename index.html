@@ -99,7 +99,7 @@
 
     /* ─── Chart Panel (Resized) ────────────────────────────────────── */
     #chartContainer {
-        height: 280px; /* Adjusted to a fixed height */
+        height: 320px; /* Adjusted to a "medium" height */
     }
     canvas { width:100% !important; height:100% !important; }
 
@@ -248,7 +248,7 @@
     let current = epochs.indexOf(keyFmt(epochStart(new Date())));
 
     // =================================================================
-    // Chart.js - REVERTED to side-by-side bars
+    // Chart.js - CONFIGURED for hybrid stacked/normal bars
     // =================================================================
     const ctx = document.getElementById('chart').getContext('2d');
     const chart = new Chart(ctx, {
@@ -261,21 +261,24 @@
             data: [], 
             backgroundColor:'rgba(56, 122, 223, 0.7)', 
             borderColor: 'rgba(56, 122, 223, 1)', 
-            borderWidth:1 
+            borderWidth:1,
+            stack: 'B' // Assign to its own stack
           },
           { 
             label: 'Pharaoh',
             data: [], 
-            backgroundColor:'rgba(236,72,153,0.7)',
+            backgroundColor:'rgba(236,72,153,0.8)',
             borderColor: '#ec4899', 
-            borderWidth: 1 
+            borderWidth: 1,
+            stack: 'A' // Assign to the component stack
           },
           { 
             label: 'Velodrome', 
             data: [], 
-            backgroundColor:'rgba(80, 200, 120, 0.7)',
+            backgroundColor:'rgba(80, 200, 120, 0.8)',
             borderColor: '#50C878', 
-            borderWidth: 1 
+            borderWidth: 1,
+            stack: 'A' // Assign to the component stack
           }
         ]
       },
@@ -285,12 +288,12 @@
         layout: { padding: 8 },
         scales: {
           x: { 
-            // REMOVED stacked: true
+            stacked: true, // Keep stacking enabled
             ticks: { color: 'var(--text-secondary)', font: { family: "'Inter', sans-serif" } }, 
             grid: { display: false } 
           },
           y: { 
-            // REMOVED stacked: true
+            stacked: true, // Keep stacking enabled
             beginAtZero: true, 
             ticks: { color: 'var(--text-secondary)', font: { family: "'Inter', sans-serif" } }, 
             grid: { color: 'rgba(255, 255, 255, 0.05)' } 
@@ -319,7 +322,6 @@
     function render() {
       const arr = prepare();
       chart.data.labels = arr.map(x => `Epoch ${x.idx}`);
-      // UPDATED to populate all three datasets again
       chart.data.datasets[0].data = arr.map(x => x.total);
       chart.data.datasets[1].data = arr.map(x => x.pharaoh);
       chart.data.datasets[2].data = arr.map(x => x.velodrome);
