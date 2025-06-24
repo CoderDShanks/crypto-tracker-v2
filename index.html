@@ -1,131 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8"/>
   <title>Crypto Dividend Tracker</title>
   <!-- Chart.js UMD bundle -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" defer></script>
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&family=Plus+Jakarta+Sans:wght@300;500&display=swap" rel="stylesheet">
   <style>
-    /* ── Reset & Base ───────────────────────────────────────────────────── */
-    * { box-sizing: border-box; margin:0; padding:0; }
+    /* ─── Animated Background ───────────────────────────────────────── */
     body {
-      background: #0d0b13;
-      color: #fff;
+      margin: 0; padding: 2rem;
       font-family: 'Plus Jakarta Sans', sans-serif;
-      padding: 2rem;
+      color: #fff;
       min-height: 100vh;
-      line-height: 1.4;
+      background: linear-gradient(-45deg, #0d0b13, #1a1a23, #0d0b13, #1a1a23);
+      background-size: 400% 400%;
+      animation: bgWave 30s ease infinite;
     }
-    h1 { text-align:center; font-size:2.5rem; margin-bottom:1rem; }
-    h2 { font-size:1.5rem; margin-bottom:.75rem; }
+    @keyframes bgWave {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
 
-    /* ── Glass Panel ────────────────────────────────────────────────────── */
+    h1 { text-align: center; font-size: 2.5rem; margin-bottom: 1rem; font-family: 'Inter', sans-serif; }
+    h2 { font-size: 1.5rem; margin-bottom: .75rem; }
+
+    /* ─── Luxurious Glass Panels ─────────────────────────────────────── */
     .glass {
       position: relative;
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(20px);
-      border-radius:16px;
-      padding:1rem;
-      margin-bottom:1.5rem;
-      border:1px solid rgba(255,255,255,0.2);
-      transition: box-shadow .3s;
-      /* default glow var */
-      --glow: 0 0 16px rgba(255,255,255,0.1);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.6), var(--glow);
+      background: rgba( 255, 255, 255, 0.08 );
+      backdrop-filter: blur( 16px );
+      border: 1px solid rgba( 212,175,55, 0.6 );
+      border-radius: 16px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 8px 32px rgba( 0,0,0,0.6 ), 0 0 20px rgba( 212,175,55,0.4 );
       overflow: hidden;
+      transition: box-shadow .3s ease;
     }
     .glass:hover {
-      box-shadow: 0 8px 32px rgba(0,0,0,0.8), var(--glow);
+      box-shadow: 0 12px 48px rgba( 0,0,0,0.8 ), 0 0 30px rgba( 212,175,55,0.6 );
     }
     .glass::before {
-      content:"";
-      position:absolute; top:-50%; left:-50%;
-      width:200%; height:200%;
+      content: "";
+      position: absolute; top:-50%; left:-50%;
+      width: 200%; height: 200%;
       background: linear-gradient(120deg, rgba(255,255,255,0.3), transparent 60%);
       transform: rotate(25deg) translateX(-200%);
-      transition: transform .8s, opacity .8s;
-      opacity:0;
+      transition: transform .8s ease, opacity .8s ease;
+      opacity: 0;
     }
     .glass:hover::before {
       transform: rotate(25deg) translateX(200%);
-      opacity:0.25;
+      opacity: .25;
     }
 
-    /* ── Per‐panel Glow Colors ─────────────────────────────────────────── */
-    .glass[data-glow="blue"]   { --glow: 0 0 20px rgba(59,130,246,0.7); }
-    .glass[data-glow="purple"] { --glow: 0 0 20px rgba(156,57,242,0.7); }
-    .glass[data-glow="pink"]   { --glow: 0 0 20px rgba(236,72,153,0.7); }
-
-    /* ── Buttons & Inputs ─────────────────────────────────────────────── */
+    /* ─── Buttons & Inputs ─────────────────────────────────────────── */
     .btn {
-      background: linear-gradient(90deg,#5a67d8,#9f7aea);
-      color:#fff; border:none; border-radius:8px;
-      padding:.6rem 1.2rem; font-size:1rem;
-      cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,0.5);
+      background: linear-gradient(90deg,#D4AF37,#FFD700);
+      color: #0d0b13;
+      border: none;
+      border-radius: 8px;
+      padding: .6rem 1.2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba( 0,0,0,0.5 );
       transition: transform .1s, box-shadow .2s;
-      margin:.25rem 0;
     }
-    .btn:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.7); }
+    .btn:hover { box-shadow: 0 6px 24px rgba( 0,0,0,0.7 ); }
     .btn:active { transform: scale(.95); }
 
     .circle-btn {
-      width:44px; height:44px;
+      width: 44px; height: 44px;
       background: rgba(255,255,255,0.15);
-      color:#fff; border:none; border-radius:50%;
-      font-size:1.2rem; cursor:pointer;
-      box-shadow:0 2px 12px rgba(0,0,0,0.6);
+      color: #fff; border: none; border-radius: 50%;
+      font-size: 1.2rem; cursor: pointer;
+      box-shadow: 0 2px 12px rgba( 0,0,0,0.6 );
       transition: background .2s, transform .1s;
-      margin:0 .25rem;
+      margin: 0 .25rem;
     }
     .circle-btn:hover { background: rgba(255,255,255,0.25); }
     .circle-btn:active { transform: scale(.9); }
 
     select, input[type=number] {
-      width:100%; padding:.5rem; margin:.4rem 0;
+      width: 100%;
+      padding: .6rem;
+      margin: .4rem 0;
       background: rgba(255,255,255,0.15);
-      border:none; border-radius:8px;
-      color:#fff; font-size:1rem;
+      border: none; border-radius: 8px;
+      color: #fff; font-size: 1rem;
     }
     select {
       appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg fill='white' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath d='M2 5L0 0h4z'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 12px center;
-      background-size:10px;
+      background-size: 10px;
     }
 
-    /* ── Layout Helpers ───────────────────────────────────────────────── */
+    /* ─── Layout Helpers ───────────────────────────────────────────── */
     .row { display:flex; align-items:center; justify-content:center; }
     .row.space { justify-content:flex-end; }
-    .spaced > * { margin:0 .3rem; }
+    .spaced > * { margin: 0 .3rem; }
     .grid { display:flex; flex-wrap:wrap; gap:.5rem; }
     .grid > * { flex:1; min-width:130px; }
 
-    /* ── Table ───────────────────────────────────────────────────────── */
-    table { width:100%; border-collapse:collapse; margin-top:1rem; }
-    th, td {
-      padding:.6rem 1rem; border-bottom:1px solid rgba(255,255,255,0.2);
+    /* ─── Table ─────────────────────────────────────────────────────── */
+    table {
+      width: 100%; border-collapse: collapse; margin-top: 1rem; 
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
-    th { text-align:left; color:rgba(255,255,255,0.7); }
-    td { text-align:right; }
-    td:first-child { text-align:left; }
+    th, td {
+      padding: .6rem 1.2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    th { text-align: left; color: rgba(255,255,255,0.7); }
+    td { text-align: right; }
+    td:first-child { text-align: left; }
   </style>
 </head>
 <body>
 
   <h1>Crypto Dividend Tracker</h1>
-  <p style="text-align:center;color:rgba(255,255,255,0.6);margin-bottom:2rem;">
-    Track your earnings across epochs in vibrant glass panels
+  <p style="text-align:center; color:rgba(255,255,255,0.6); margin-bottom:2rem;">
+    A luxurious, moving-wave glass UI with gold accents
   </p>
 
-  <!-- Chart Panel (Neon Blue Glow) -->
-  <div class="glass" data-glow="blue">
+  <!-- Dividend Performance Chart -->
+  <div class="glass">
     <h2>Dividend Performance</h2>
     <canvas id="chart" height="180"></canvas>
   </div>
 
-  <!-- Controls Panel (Neon Purple Glow) -->
-  <div class="glass" data-glow="purple">
+  <!-- Controls Panel -->
+  <div class="glass">
     <div class="row space spaced">
       <button id="delPrev" class="circle-btn">−</button>
       <button id="addPrev" class="circle-btn">＋</button>
@@ -137,7 +147,7 @@
       <span id="epochNum" style="font-size:1.2rem;">Epoch #1</span>
       <button id="next" class="circle-btn">&gt;</button>
     </div>
-    <div id="epochRange" style="text-align:center;opacity:.7;margin-bottom:1.2rem;">
+    <div id="epochRange" style="text-align:center; opacity:.7; margin-bottom:1.2rem;">
       Loading…
     </div>
     <div class="grid">
@@ -151,8 +161,8 @@
     </div>
   </div>
 
-  <!-- Table Panel (Neon Pink Glow) -->
-  <div class="glass" data-glow="pink">
+  <!-- Table Panel -->
+  <div class="glass">
     <table>
       <thead>
         <tr><th>Epoch #</th><th>Pharaoh</th><th>Velodrome</th><th>Total</th></tr>
@@ -172,15 +182,14 @@
       const s=new Date(d); s.setDate(d.getDate()-diff);
       return new Date(s.getFullYear(),s.getMonth(),s.getDate());
     }
-    const keyFmt = d => d.toISOString().slice(0,10);
+    const keyFmt = d=>d.toISOString().slice(0,10);
     function labelFmt(s) {
       const e=new Date(s); e.setDate(s.getDate()+6);
       const o={month:'short',day:'numeric'};
       return `${s.toLocaleDateString(undefined,o)}–${e.toLocaleDateString(undefined,o)}, ${e.getFullYear()}`;
     }
 
-    // initialize epochs
-    let epochs = (() => {
+    let epochs = (()=> {
       const d=loadData(), ks=Object.keys(d);
       const cur=keyFmt(epochStart(new Date()));
       if(!ks.includes(cur)) ks.push(cur);
@@ -190,11 +199,10 @@
 
     // Chart.js
     const ctx = document.getElementById('chart').getContext('2d');
-    const chart = new Chart(ctx, {
-      type:'line',
+    const chart = new Chart(ctx,{ type:'line',
       data:{ labels:[], datasets:[
-        { label:'Total',     data:[], borderColor:'#8b5cf6', backgroundColor:'rgba(59,130,246,0.3)', fill:true },
-        { label:'Pharaoh',   data:[], borderColor:'#ec4899', backgroundColor:'rgba(236,72,153,0.3)', fill:false },
+        { label:'Total', data:[], borderColor:'#D4AF37', backgroundColor:'rgba(212,175,55,0.3)', fill:true },
+        { label:'Pharaoh', data:[], borderColor:'#ec4899', backgroundColor:'rgba(236,72,153,0.3)', fill:false },
         { label:'Velodrome', data:[], borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.2)', fill:false }
       ]},
       options:{ responsive:true, scales:{ x:{ title:{display:true,text:'Epoch #'}}, y:{ beginAtZero:true } } }
@@ -208,9 +216,8 @@
                  pharaoh:v.pharaoh, velodrome:v.velodrome, total:v.pharaoh+v.velodrome };
       });
     }
-
     function render() {
-      const arr = prepare();
+      const arr=prepare();
       chart.data.labels = arr.map(x=>x.idx);
       chart.data.datasets[0].data = arr.map(x=>x.total);
       chart.data.datasets[1].data = arr.map(x=>x.pharaoh);
@@ -232,7 +239,7 @@
       `).join('');
     }
 
-    // bindings
+    // Controls
     document.getElementById('addPrev').onclick = ()=>{ const d=new Date(epochs[0]); d.setDate(d.getDate()-7); epochs.unshift(keyFmt(d)); current=0; render(); };
     document.getElementById('delPrev').onclick = ()=>{ if(epochs.length>1){ epochs.shift(); if(current>0) current--; render(); } };
     document.getElementById('addNext').onclick = ()=>{ const d=new Date(epochs[epochs.length-1]); d.setDate(d.getDate()+7); epochs.push(keyFmt(d)); current=epochs.length-1; render(); };
@@ -240,15 +247,15 @@
     document.getElementById('prev').onclick    = ()=>{ if(current>0) current--; render(); };
     document.getElementById('next').onclick    = ()=>{ if(current<epochs.length-1) current++; render(); };
 
-    document.getElementById('addBtn').onclick = () => {
-      const c = document.getElementById('crypto').value;
-      const a = parseFloat(document.getElementById('amount').value);
-      if(!c||isNaN(a)) return alert('Select a crypto and enter a valid number.');
-      const key = epochs[current], d=loadData();
+    document.getElementById('addBtn').onclick = ()=> {
+      const c=document.getElementById('crypto').value;
+      const a=parseFloat(document.getElementById('amount').value);
+      if(!c||isNaN(a)) return alert('Select a crypto & enter valid amount.');
+      const key=epochs[current], d=loadData();
       if(!d[key]) d[key]={pharaoh:0,velodrome:0};
-      d[key][c] += a;
+      d[key][c]+=a;
       saveData(d);
-      document.getElementById('amount').value = '';
+      document.getElementById('amount').value='';
       render();
     };
 
