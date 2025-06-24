@@ -12,9 +12,8 @@
     :root {
       --background: #111113;
       --surface: #1C1C1E;
-      --primary: #387ADF; /* Blue for Ramses */
-      --yellow: #FFD700;  /* Yellow for Pharaoh */
-      --red: #EF4444;     /* Red for Velodrome */
+      --pharaoh-color: #FFD700;  /* Yellow for Pharaoh */
+      --velodrome-color: #EF4444; /* Red for Velodrome */
       --text-primary: #F1F1F1;
       --text-secondary: #8E8E93;
       --border: #3A3A3C;
@@ -112,15 +111,15 @@
     .grid > * { flex:1; min-width:120px; }
     
     .btn {
-      background-color: var(--primary);
-      color: var(--text-primary);
+      background-color: var(--text-primary);
+      color: var(--background);
       font-weight: 600;
       border: none; border-radius:10px;
       padding:.75rem 1.5rem; font-size:1rem;
       cursor:pointer;
       transition: background-color .2s ease, transform .2s ease;
     }
-    .btn:hover { background-color: #4A8EEE; }
+    .btn:hover { background-color: #CCCCCC; }
     .btn:active { transform: scale(.97); }
 
     .circle-btn {
@@ -135,7 +134,7 @@
     .circle-btn:hover {
       background: rgba(255, 255, 255, 0.1);
       color: var(--text-primary);
-      border-color: var(--primary);
+      border-color: var(--text-primary);
     }
     .circle-btn:active { transform: scale(.95); }
     .circle-btn:disabled { opacity: 0.4; cursor: not-allowed; background: transparent; border-color: var(--border); }
@@ -149,8 +148,8 @@
     }
     select:focus, input:focus {
         outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(56, 122, 223, 0.3);
+        border-color: var(--text-primary);
+        box-shadow: 0 0 0 3px rgba(241, 241, 241, 0.3);
     }
     select {
       appearance:none;
@@ -202,7 +201,6 @@
       <div class="grid">
         <select id="crypto">
           <option value="">Choose Crypto</option>
-          <option value="ramses">Ramses</option>
           <option value="pharaoh">Pharaoh</option>
           <option value="velodrome">Velodrome</option>
         </select>
@@ -214,7 +212,7 @@
     <div class="panel">
       <table>
         <thead>
-          <tr><th>Epoch #</th><th>Ramses</th><th>Pharaoh</th><th>Velodrome</th><th>Total</th></tr>
+          <tr><th>Epoch #</th><th>Pharaoh</th><th>Velodrome</th><th>Total</th></tr>
         </thead>
         <tbody id="tableBody"></tbody>
       </table>
@@ -249,9 +247,12 @@
       return ks.sort();
     })();
     let current = epochs.indexOf(keyFmt(epochStart(new Date())));
+    
+    // This array will track if data was swapped for the tooltip
+    let dataWasSwapped = [];
 
     // =================================================================
-    // Chart.js - CONFIGURED for true stacked chart
+    // Chart.js Configuration
     // =================================================================
     const ctx = document.getElementById('chart').getContext('2d');
     const chart = new Chart(ctx, {
@@ -260,24 +261,17 @@
         labels: [],
         datasets: [
           { 
-            label: 'Ramses',
-            data: [], 
-            backgroundColor:'rgba(56, 122, 223, 0.8)', // Blue
-            borderColor: 'var(--primary)', 
-            borderWidth: 1 
-          },
-          { 
             label: 'Pharaoh',
             data: [], 
             backgroundColor:'rgba(255, 215, 0, 0.8)', // Yellow
-            borderColor: 'var(--yellow)', 
+            borderColor: 'var(--pharaoh-color)', 
             borderWidth: 1
           },
           { 
             label: 'Velodrome', 
             data: [], 
             backgroundColor:'rgba(239, 68, 68, 0.8)', // Red
-            borderColor: 'var(--red)', 
+            borderColor: 'var(--velodrome-color)', 
             borderWidth: 1
           }
         ]
@@ -289,15 +283,14 @@
         scales: {
           x: { 
             stacked: true, 
-            ticks: { color: 'var(--text-secondary)', font: { family: "'Inter', sans-serif" } }, 
+            ticks: { color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" } }, 
             grid: { display: false } 
           },
           y: { 
             stacked: true, 
             beginAtZero: true, 
             ticks: { 
-                color: 'var(--text-secondary)', font: { family: "'Inter', sans-serif" },
-                // Format Y-axis ticks as currency
+                color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" },
                 callback: function(value) { return '$' + value; }
             }, 
             grid: { color: 'rgba(255, 255, 255, 0.05)' } 
@@ -307,8 +300,28 @@
           tooltip: {
             backgroundColor: 'rgba(10,10,10,0.8)', titleFont: { family: "'Inter', sans-serif", weight: '600', size: 14 },
             bodyFont: { family: "'Inter', sans-serif" }, titleColor: '#FFFFFF', bodyColor: '#CCCCCC',
-            callbacks: { title: ctx => prepare()[ctx[0].dataIndex].label },
             padding: 12, cornerRadius: 8,
+            callbacks: { 
+              title: ctx => prepare()[ctx[0].dataIndex].label,
+              // Custom label callback to show correct crypto name
+              label: function(context) {
+                const dataIndex = context.dataIndex;
+                const datasetIndex = context.datasetIndex;
+                const wasSwapped = dataWasSwapped[dataIndex];
+                let label = '';
+                // Determine the correct label based on whether the data was swapped for this bar
+                if (!wasSwapped) {
+                    label = chart.data.datasets[datasetIndex].label || '';
+                } else {
+                    label = chart.data.datasets[1 - datasetIndex].label || '';
+                }
+                if (label) {
+                    label += ': ';
+                }
+                label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.raw);
+                return label;
+              }
+            },
           },
           legend: { labels: { color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" } } }
         }
@@ -318,26 +331,44 @@
     function prepare() {
       const d = loadData();
       return epochs.map((k,i) => {
-        // Updated to handle Ramses
-        const v = d[k] || { ramses: 0, pharaoh:0, velodrome:0 };
+        const v = d[k] || { pharaoh:0, velodrome:0 };
         return { 
             key: k, idx: i+1, 
             label: labelFmt(new Date(k)), 
-            ramses: v.ramses || 0,
             pharaoh: v.pharaoh || 0,
             velodrome: v.velodrome || 0,
-            total: (v.ramses || 0) + (v.pharaoh || 0) + (v.velodrome || 0) 
+            total: (v.pharaoh || 0) + (v.velodrome || 0) 
         };
       });
     }
 
     function render() {
       const arr = prepare();
+
+      // --- Dynamic Stacking Logic ---
+      const pharaohData = [];
+      const velodromeData = [];
+      dataWasSwapped = []; // Reset the swap tracker
+
+      arr.forEach(epoch => {
+        if (epoch.pharaoh > epoch.velodrome) {
+          // If pharaoh is larger, it should go on top.
+          // Since velodrome's dataset is second, we put pharaoh's value there.
+          pharaohData.push(epoch.velodrome);
+          velodromeData.push(epoch.pharaoh);
+          dataWasSwapped.push(true); // Mark this epoch as swapped
+        } else {
+          // Otherwise, pharaoh is smaller or equal, so it stays on the bottom.
+          pharaohData.push(epoch.pharaoh);
+          velodromeData.push(epoch.velodrome);
+          dataWasSwapped.push(false); // Mark as not swapped
+        }
+      });
+      // --- End of Logic ---
+      
       chart.data.labels = arr.map(x => `Epoch ${x.idx}`);
-      // Updated to populate three datasets for the stacked chart
-      chart.data.datasets[0].data = arr.map(x => x.ramses);
-      chart.data.datasets[1].data = arr.map(x => x.pharaoh);
-      chart.data.datasets[2].data = arr.map(x => x.velodrome);
+      chart.data.datasets[0].data = pharaohData;
+      chart.data.datasets[1].data = velodromeData;
       chart.update();
 
       document.getElementById('epochNum').textContent   = `Epoch #${arr[current].idx}`;
@@ -347,13 +378,11 @@
       
       const formatCurrency = (num) => `$${num.toFixed(2)}`;
       
-      // Updated to include Ramses in the table
       document.getElementById('tableBody').innerHTML = arr.map(x => `
         <tr>
           <td>${x.idx}</td>
-          <td style="color:var(--primary);">${formatCurrency(x.ramses)}</td>
-          <td style="color:var(--yellow);">${formatCurrency(x.pharaoh)}</td>
-          <td style="color:var(--red);">${formatCurrency(x.velodrome)}</td>
+          <td style="color:var(--pharaoh-color);">${formatCurrency(x.pharaoh)}</td>
+          <td style="color:var(--velodrome-color);">${formatCurrency(x.velodrome)}</td>
           <td style="font-weight:600; color: var(--text-primary);">${formatCurrency(x.total)}</td>
         </tr>
       `).reverse().join('');
@@ -371,8 +400,7 @@
       const a = parseFloat(document.getElementById('amount').value);
       if(!c||isNaN(a)) return alert('Please select a crypto and enter a valid amount.');
       let d = loadData(), k=epochs[current];
-      // Updated to handle Ramses
-      d[k] = d[k]||{ ramses: 0, pharaoh:0, velodrome:0 };
+      d[k] = d[k]||{ pharaoh:0, velodrome:0 };
       d[k][c] = a;
       saveData(d); document.getElementById('amount').value=''; render();
     };
