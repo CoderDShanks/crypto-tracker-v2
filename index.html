@@ -2,49 +2,52 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Crypto Dividend Tracker - Luxury Edition</title>
+  <title>Crypto Dividend Tracker - Minimalist Edition</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" defer></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Raleway:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* ─── Base & Thematic Background ────────────────────────────────── */
+    /* ─── Root & Thematic Colors ───────────────────────────────────── */
     :root {
-      --gold-primary: #D4AF37;
-      --gold-secondary: #FFD700;
-      --background-dark: #0d0b13;
-      --background-light: #1a1a23;
-      --text-light: #f0f0f0;
-      --text-muted: rgba(240, 240, 240, 0.6);
+      --background: #111113;
+      --surface: #1C1C1E;
+      --primary: #387ADF; /* A calm, elegant blue */
+      --text-primary: #F1F1F1;
+      --text-secondary: #8E8E93;
+      --border: #3A3A3C;
     }
 
+    /* ─── Base & Animated Background ──────────────────────────────── */
     html, body {
       height: 100%;
       margin: 0;
       padding: 0;
-      overflow: hidden; /* Prevent scrollbars from layout shifts */
-      background: var(--background-dark);
-      font-family: 'Raleway', sans-serif;
-      color: var(--text-light);
-    }
-
-    /* A more sophisticated, multi-layered animated background */
-    body::before {
-      content: '';
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(-45deg, var(--gold-primary), var(--background-dark), var(--background-light), #3b82f6, #ec4899);
-      background-size: 600% 600%;
-      animation: bgWave 30s ease infinite;
-      opacity: 0.15;
-      filter: blur(100px);
-    }
-
-    @keyframes bgWave {
-      0%   { background-position: 0% 50%; }
-      50%  { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+      overflow: hidden;
+      background-color: var(--background);
+      font-family: 'Inter', sans-serif;
+      color: var(--text-primary);
     }
     
+    /* Subtle animated grid background for a "premium tech" feel */
+    body::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background-image: 
+            linear-gradient(to right, rgba(60, 60, 60, 0.2) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(60, 60, 60, 0.2) 1px, transparent 1px);
+        background-size: 3rem 3rem;
+        animation: bg-pan 60s linear infinite;
+        opacity: 0.5;
+    }
+
+    @keyframes bg-pan {
+        from { background-position: 0 0; }
+        to { background-position: -3rem 0; }
+    }
+
     .container {
       display: flex;
       flex-direction: column;
@@ -52,167 +55,138 @@
       padding: 1.5rem;
       box-sizing: border-box;
       overflow-y: auto; /* Allow scrolling on small screens */
+      -ms-overflow-style: none; /* IE and Edge */
+      scrollbar-width: none; /* Firefox */
     }
+    .container::-webkit-scrollbar { display: none; } /* Chrome, Safari, Opera */
 
-    /* ─── Header & Typography ────────────────────────────────────────── */
+    /* ─── Header & Typography ──────────────────────────────────────── */
     h1 {
-      font-family: 'Playfair Display', serif;
-      font-size: 2.75rem;
+      font-size: 2.25rem;
+      font-weight: 700;
       text-align: center;
       margin-bottom: .25rem;
-      color: var(--gold-secondary);
-      text-shadow: 0 0 10px rgba(212, 175, 55, 0.6), 0 0 20px rgba(212, 175, 55, 0.4);
-      animation: title-glow 3s infinite alternate;
-    }
-    
-    @keyframes title-glow {
-        from { text-shadow: 0 0 8px rgba(212,175,55,0.5), 0 0 16px rgba(212,175,55,0.3); }
-        to { text-shadow: 0 0 16px rgba(212,175,55,0.7), 0 0 32px rgba(212,175,55,0.5); }
+      letter-spacing: -1px;
     }
 
     p.subtitle {
       text-align: center;
-      color: var(--text-muted);
-      margin-bottom: 1.5rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
       font-weight: 400;
     }
+    h2 { font-weight: 600; font-size: 1.25rem; margin-top:0; }
 
-    /* ─── Glass Panel with Cursor Reflection ──────────────────────── */
-    .glass {
-      position: relative;
-      background: rgba(20, 20, 30, 0.5);
-      backdrop-filter: blur(20px) saturate(180%);
-      border: 1px solid rgba(212, 175, 55, 0.4);
+    /* ─── Matt Panel Styling ───────────────────────────────────────── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 16px;
       padding: 1.5rem;
       margin-bottom: 1.25rem;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-      overflow: hidden;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      animation: panel-fade-in 0.8s ease-out forwards;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      animation: panel-fade-in 0.6s ease-out forwards;
       opacity: 0;
     }
     
     @keyframes panel-fade-in {
-      from { opacity: 0; transform: translateY(20px); }
+      from { opacity: 0; transform: translateY(15px); }
       to   { opacity: 1; transform: translateY(0); }
     }
     
-    /* Delay animations for each panel */
-    #chartPanel { animation-delay: 0.2s; }
-    #controls { animation-delay: 0.4s; }
-    .glass:last-child { animation-delay: 0.6s; }
+    /* Staggered animation delay for panels */
+    #chartPanel { animation-delay: 0.1s; }
+    #controls { animation-delay: 0.2s; }
+    .panel:last-child { animation-delay: 0.3s; }
 
-    /* The cursor reflection effect */
-    .glass::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      border-radius: inherit;
-      /* The gradient position is controlled by JS via CSS variables */
-      background: radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(212, 175, 55, 0.3), transparent 25%);
-      opacity: 0;
-      transition: opacity 0.4s ease;
-      pointer-events: none; /* Ignore mouse events */
+    /* ─── Chart Panel (Taller) ─────────────────────────────────────── */
+    #chartContainer {
+        height: 280px; /* Made slightly taller as requested */
     }
-
-    .glass:hover::before {
-      opacity: 1;
-    }
-
-    /* ─── Chart Panel ──────────────────────────────────────────────── */
-    #chartPanel { flex: 0 0 auto; }
-    #chartContainer { height: 240px; }
     canvas { width:100% !important; height:100% !important; }
 
-    /* ─── Controls & Inputs ────────────────────────────────────────── */
-    .row { display:flex; align-items:center; justify-content:center; gap: 0.5rem; }
+    /* ─── Controls, Buttons & Inputs ───────────────────────────────── */
+    .row { display:flex; align-items:center; justify-content:center; gap: 0.75rem; }
     .row.space { justify-content: flex-end; }
-    .grid { display:flex; flex-wrap:wrap; gap:.75rem; margin-top: 1rem;}
+    .grid { display:flex; flex-wrap:wrap; gap:.75rem; }
     .grid > * { flex:1; min-width:120px; }
-
+    
     .btn {
-      background: linear-gradient(125deg, var(--gold-primary), var(--gold-secondary));
-      color: #0d0b13;
+      background-color: var(--primary);
+      color: var(--text-primary);
       font-weight: 600;
       border: none; border-radius:10px;
-      padding:.7rem 1.4rem; font-size:1rem;
+      padding:.75rem 1.5rem; font-size:1rem;
       cursor:pointer;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 -2px 4px rgba(0,0,0,0.2);
-      transition: transform .2s ease, box-shadow .2s ease;
+      transition: background-color .2s ease, transform .2s ease;
     }
-    .btn:hover {
-      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4), inset 0 -2px 4px rgba(0,0,0,0.2);
-      transform: translateY(-2px);
-    }
-    .btn:active { transform: translateY(0) scale(.97); }
+    .btn:hover { background-color: #4A8EEE; }
+    .btn:active { transform: scale(.97); }
 
     .circle-btn {
       width:44px; height:44px;
       background: rgba(255, 255, 255, 0.05);
-      color: var(--text-light);
-      border:1px solid rgba(212,175,55,0.5);
-      border-radius:50%; font-size:1.4rem; cursor:pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      color: var(--text-secondary);
+      border:1px solid var(--border);
+      border-radius:50%; font-size:1.2rem; cursor:pointer;
+      display:grid; place-items:center;
       transition: all .2s ease;
     }
     .circle-btn:hover {
-      background: rgba(212, 175, 55, 0.2);
-      border-color: rgba(212, 175, 55, 0.8);
-      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+      border-color: var(--primary);
     }
-    .circle-btn:active { transform: translateY(0) scale(.9); }
-    .circle-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .circle-btn:active { transform: scale(.95); }
+    .circle-btn:disabled { opacity: 0.4; cursor: not-allowed; background: transparent; border-color: var(--border); }
 
     select, input[type=number] {
-      width:100%; padding:.7rem;
-      background: rgba(0,0,0, 0.3);
-      border:1px solid rgba(212,175,55,0.5);
-      border-radius:10px; color:var(--text-light); font-size:1rem;
-      box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
-      transition: border-color 0.3s, box-shadow 0.3s;
+      width:100%; padding:.75rem;
+      background: var(--background);
+      border:1px solid var(--border);
+      border-radius:10px; color:var(--text-primary); font-size:1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
     select:focus, input:focus {
         outline: none;
-        border-color: var(--gold-primary);
-        box-shadow: inset 0 2px 8px rgba(0,0,0,0.4), 0 0 10px rgba(212, 175, 55, 0.5);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(56, 122, 223, 0.3);
     }
-
     select {
       appearance:none;
-      background-image:url("data:image/svg+xml,%3Csvg fill='white' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 12L2 6h12z'/%3E%3C/svg%3E");
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%238E8E93' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
       background-repeat:no-repeat;
       background-position:right 1rem center;
-      background-size:12px;
     }
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
 
     /* ─── Table ────────────────────────────────────────────────────── */
     table {
       width:100%; border-collapse:collapse; margin-top:.75rem;
     }
     th, td {
-      padding:.8rem 1.2rem; border-bottom:1px solid rgba(212, 175, 55, 0.2);
+      padding:.8rem 1rem; border-bottom:1px solid var(--border);
       text-align: right;
     }
-    th { text-align:left; color:var(--text-muted); font-weight: 400; }
+    th { text-align:left; color:var(--text-secondary); font-weight: 500; font-size: 0.9rem;}
     td:first-child, th:first-child { text-align:left; }
-    tbody tr { transition: background-color 0.3s ease; }
-    tbody tr:hover { background-color: rgba(212, 175, 55, 0.08); }
+    tbody tr { transition: background-color 0.2s ease; }
+    tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
     
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Crypto Dividend Tracker</h1>
-    <p class="subtitle">Monitor weekly earnings with an unparalleled user experience.</p>
+    <p class="subtitle">A minimal and elegant way to track your earnings.</p>
 
-    <div id="chartPanel" class="glass">
+    <div id="chartPanel" class="panel">
       <h2>Dividend Performance</h2>
       <div id="chartContainer"><canvas id="chart"></canvas></div>
     </div>
 
-    <div id="controls" class="glass">
+    <div id="controls" class="panel">
       <div class="row space">
         <button id="delPrev" class="circle-btn" title="Delete Earliest Epoch">−</button>
         <button id="addPrev" class="circle-btn" title="Add Earlier Epoch">＋</button>
@@ -221,10 +195,10 @@
       </div>
       <div class="row" style="margin:1rem 0;">
         <button id="prev" class="circle-btn">&lt;</button>
-        <span id="epochNum" style="font-size:1.4rem; font-weight:600; flex-grow:1; text-align:center;">Epoch #1</span>
+        <span id="epochNum" style="font-size:1.25rem; font-weight:600; flex-grow:1; text-align:center;">Epoch #1</span>
         <button id="next" class="circle-btn">&gt;</button>
       </div>
-      <div id="epochRange" style="text-align:center;color:var(--text-muted);margin-bottom:1rem;">Loading…</div>
+      <div id="epochRange" style="text-align:center;color:var(--text-secondary);margin-bottom:1.5rem;">Loading…</div>
       <div class="grid">
         <select id="crypto">
           <option value="">Choose Crypto</option>
@@ -236,7 +210,7 @@
       </div>
     </div>
 
-    <div class="glass">
+    <div class="panel">
       <table>
         <thead>
           <tr><th>Epoch #</th><th>Pharaoh</th><th>Velodrome</th><th>Total</th></tr>
@@ -275,16 +249,16 @@
     })();
     let current = epochs.indexOf(keyFmt(epochStart(new Date())));
 
-    // Chart.js Bar Chart
+    // Chart.js - Themed for new minimal design
     const ctx = document.getElementById('chart').getContext('2d');
     const chart = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: [],
         datasets: [
-          { label: 'Total',     data: [], backgroundColor:'rgba(212,175,55,0.7)', borderColor: 'var(--gold-primary)', borderWidth:1 },
+          { label: 'Total',     data: [], backgroundColor:'rgba(56, 122, 223, 0.7)', borderColor: 'rgba(56, 122, 223, 1)', borderWidth:1 },
           { label: 'Pharaoh',   data: [], backgroundColor:'rgba(236,72,153,0.7)', borderColor: '#ec4899', borderWidth:1 },
-          { label: 'Velodrome', data: [], backgroundColor:'rgba(59,130,246,0.7)', borderColor: '#3b82f6', borderWidth:1 }
+          { label: 'Velodrome', data: [], backgroundColor:'rgba(80, 200, 120, 0.7)', borderColor: '#50C878', borderWidth:1 } // Changed Velodrome to a green
         ]
       },
       options: {
@@ -292,12 +266,17 @@
         maintainAspectRatio: false,
         layout: { padding: 8 },
         scales: {
-          x: { title: { display: false }, ticks: { color: 'var(--text-muted)', font: { family: "'Raleway', sans-serif" } }, grid: { display: false } },
-          y: { beginAtZero: true, title: { display: true, text: 'Dividends (USD)', color: 'var(--text-muted)' }, ticks: { color: 'var(--text-muted)' }, grid: { color: 'rgba(212,175,55,0.15)' } }
+          x: { ticks: { color: 'var(--text-secondary)', font: { family: "'Inter', sans-serif" } }, grid: { display: false } },
+          y: { beginAtZero: true, ticks: { color: 'var(--text-secondary)', font: { family: "'Inter', sans-serif" } }, grid: { color: 'rgba(255, 255, 255, 0.05)' } }
         },
         plugins: {
-          tooltip: { backgroundColor: 'rgba(10,10,10,0.8)', titleFont: { size: 14, family: "'Playfair Display', serif" }, bodyFont: { family: "'Raleway', sans-serif" }, titleColor: 'var(--gold-secondary)', bodyColor: 'var(--text-light)', callbacks: { title: ctx => prepare()[ctx[0].dataIndex].label }, padding: 12, cornerRadius: 8 },
-          legend: { labels: { color: 'var(--text-light)', font: { family: "'Raleway', sans-serif" } } }
+          tooltip: {
+            backgroundColor: 'rgba(10,10,10,0.8)', titleFont: { family: "'Inter', sans-serif", weight: '600', size: 14 },
+            bodyFont: { family: "'Inter', sans-serif" }, titleColor: '#FFFFFF', bodyColor: '#CCCCCC',
+            callbacks: { title: ctx => prepare()[ctx[0].dataIndex].label },
+            padding: 12, cornerRadius: 8,
+          },
+          legend: { labels: { color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" } } }
         }
       }
     });
@@ -329,10 +308,10 @@
         <tr>
           <td>${x.idx}</td>
           <td style="color:#ec4899;">${formatCurrency(x.pharaoh)}</td>
-          <td style="color:#3b82f6;">${formatCurrency(x.velodrome)}</td>
-          <td style="font-weight:600; color: var(--gold-primary);">${formatCurrency(x.total)}</td>
+          <td style="color:#50C878;">${formatCurrency(x.velodrome)}</td>
+          <td style="font-weight:600; color: var(--text-primary);">${formatCurrency(x.total)}</td>
         </tr>
-      `).reverse().join(''); // Show latest first in table
+      `).reverse().join('');
     }
 
     // Controls
@@ -348,25 +327,11 @@
       if(!c||isNaN(a)) return alert('Please select a crypto and enter a valid amount.');
       let d = loadData(), k=epochs[current];
       d[k] = d[k]||{pharaoh:0,velodrome:0};
-      d[k][c] = a; // Changed from += to = for direct update
+      d[k][c] = a;
       saveData(d); document.getElementById('amount').value=''; render();
     };
 
     render();
-
-    // =================================================================
-    // NEW UI ENHANCEMENT: Cursor Reflection Effect
-    // =================================================================
-    const glassPanels = document.querySelectorAll('.glass');
-    glassPanels.forEach(panel => {
-      panel.addEventListener('mousemove', e => {
-        const rect = panel.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        panel.style.setProperty('--mouse-x', `${x}px`);
-        panel.style.setProperty('--mouse-y', `${y}px`);
-      });
-    });
   };
   </script>
 </body>
