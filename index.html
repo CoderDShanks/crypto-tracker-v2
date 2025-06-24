@@ -1,136 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Crypto Dividend Tracker</title>
-  <!-- Chart.js from CDN -->
+  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Tailwind for quick styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 1rem; }
-    .card { background:#f9f9f9; padding:1rem; margin-bottom:1rem; border-radius:8px; }
-    label, button { display:block; margin-top:0.5rem; }
-    input, select { width:100%; padding:0.5rem; margin-top:0.25rem; }
+    body { background: #f3f4f6; }
   </style>
 </head>
-<body>
+<body class="font-sans">
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6 text-center">📊 Weekly Dividends</h1>
 
-  <h1>🚀 Crypto Dividend Tracker</h1>
+    <!-- Chart Container -->
+    <div class="bg-white rounded-2xl shadow p-4 mb-8">
+      <canvas id="dividendChart"></canvas>
+    </div>
 
-  <!-- 1. Live Price -->
-  <div class="card">
-    <h2>Live Price</h2>
-    <select id="symbol">
-      <option value="bitcoin">Bitcoin (BTC)</option>
-      <option value="ethereum">Ethereum (ETH)</option>
-      <!-- add more if you like -->
-    </select>
-    <p>Price: $<span id="price">—</span></p>
-    <button id="refreshPrice">Refresh Price</button>
-  </div>
+    <!-- Dividend Entry Form -->
+    <div class="bg-white rounded-2xl shadow p-6 mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label class="block font-medium mb-1">Crypto</label>
+        <select id="cryptoSelect" class="w-full p-2 border rounded">
+          <option value="" disabled selected>Select...</option>
+          <option value="pharaoh">Pharaoh</option>
+          <option value="velodrome">Velodrome Finance</option>
+        </select>
+      </div>
+      <div>
+        <label class="block font-medium mb-1">Date</label>
+        <input type="date" id="divDate" class="w-full p-2 border rounded" />
+      </div>
+      <div>
+        <label class="block font-medium mb-1">Amount (USD)</label>
+        <input type="number" id="divAmount" step="0.01" placeholder="e.g. 12.34"
+               class="w-full p-2 border rounded" />
+        <button id="addBtn"
+                class="mt-4 w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">
+          Add Dividend
+        </button>
+      </div>
+    </div>
 
-  <!-- 2. Record Dividend -->
-  <div class="card">
-    <h2>Add Dividend</h2>
-    <label>
-      Date
-      <input type="date" id="divDate" value="">
-    </label>
-    <label>
-      Amount (USD)
-      <input type="number" id="divAmount" step="0.01" placeholder="e.g. 10.50">
-    </label>
-    <button id="saveDiv">Save Dividend</button>
-  </div>
-
-  <!-- 3. Chart -->
-  <div class="card">
-    <h2>Weekly Dividends</h2>
-    <canvas id="chartDivs"></canvas>
+    <!-- Table of Weekly Dividends -->
+    <div class="bg-white rounded-2xl shadow p-4 overflow-x-auto">
+      <table class="w-full table-auto text-sm">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="p-2 text-left">Week</th>
+            <th class="p-2 text-right">Pharaoh ($)</th>
+            <th class="p-2 text-right">Velodrome ($)</th>
+            <th class="p-2 text-right">Total ($)</th>
+          </tr>
+        </thead>
+        <tbody id="dividendTable"></tbody>
+      </table>
+    </div>
   </div>
 
   <script>
-    // ——— Helpers ———
-    const COIN_API = 'https://api.coingecko.com/api/v3/simple/price';
+    // ——— LocalStorage Helpers ———
+    const LS_KEY = 'dividends_v2';
+    const loadDivs = () => JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+    const saveDivs = arr => localStorage.setItem(LS_KEY, JSON.stringify(arr));
 
-    function fetchPrice(symbol) {
-      document.getElementById('price').textContent = '…';
-      fetch(\`\${COIN_API}?ids=\${symbol}&vs_currencies=usd\`)
-        .then(r => r.json())
-        .then(d => {
-          document.getElementById('price').textContent = d[symbol].usd.toFixed(2);
-        })
-        .catch(_ => {
-          document.getElementById('price').textContent = 'Error';
-        });
-    }
-
-    function loadDividends() {
-      // Get from LocalStorage or empty array
-      return JSON.parse(localStorage.getItem('dividends') || '[]');
-    }
-    function saveDividends(arr) {
-      localStorage.setItem('dividends', JSON.stringify(arr));
-    }
-
-    function addDividend(date, amount) {
-      const arr = loadDividends();
-      arr.push({ date, amount: parseFloat(amount) });
-      saveDividends(arr);
-      drawChart();
-    }
-
+    // ——— Group by Calendar Week ———
     function groupByWeek(divs) {
       const weeks = {};
-      divs.forEach(d => {
-        const dt = new Date(d.date);
-        // get Monday of that week:
-        const day = dt.getDay(), diff = dt.getDate() - day + (day === 0 ? -6 : 1);
+      divs.forEach(({ date, crypto, amount }) => {
+        const dt = new Date(date);
+        const day = dt.getDay();
+        const diff = dt.getDate() - day + (day === 0 ? -6 : 1);
         const mon = new Date(dt.setDate(diff));
-        const key = mon.toISOString().slice(0,10);
-        weeks[key] = (weeks[key] || 0) + d.amount;
+        const key = mon.toISOString().slice(0, 10);
+        weeks[key] = weeks[key] || { pharaoh: 0, velodrome: 0 };
+        weeks[key][crypto] += amount;
       });
-      return Object.entries(weeks)
-        .sort((a,b)=> a[0] < b[0] ? -1:1)
-        .map(([week, total])=> ({ week, total }));
+      return Object
+        .entries(weeks)
+        .sort(([a], [b]) => a < b ? -1 : 1)
+        .map(([week, obj]) => ({
+          week,
+          pharaoh: obj.pharaoh,
+          velodrome: obj.velodrome,
+          total: obj.pharaoh + obj.velodrome
+        }));
     }
 
-    // ——— Chart Setup ———
-    const ctx = document.getElementById('chartDivs').getContext('2d');
-    const chart = new Chart(ctx, {
+    // ——— Chart.js Setup ———
+    const ctx = document.getElementById('dividendChart').getContext('2d');
+    const dividendChart = new Chart(ctx, {
       type: 'bar',
-      data: { labels: [], datasets: [{
-        label: 'USD per week',
-        data: [],
-        backgroundColor: 'rgba(0,123,255,0.5)'
-      }]},
-      options: { scales: { y: { beginAtZero: true } } }
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Pharaoh',
+            data: [],
+            backgroundColor: 'rgba(239, 68, 68, 0.7)'
+          },
+          {
+            label: 'Velodrome Finance',
+            data: [],
+            backgroundColor: 'rgba(59, 130, 246, 0.7)'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: { stacked: true },
+          y: { stacked: true, beginAtZero: true }
+        }
+      }
     });
 
-    function drawChart() {
-      const data = groupByWeek(loadDividends());
-      chart.data.labels = data.map(d=> d.week);
-      chart.data.datasets[0].data = data.map(d=> d.total);
-      chart.update();
+    // ——— Render Chart + Table ———
+    function render() {
+      const data = groupByWeek(loadDivs());
+
+      // Chart
+      dividendChart.data.labels = data.map(d => d.week);
+      dividendChart.data.datasets[0].data = data.map(d => d.pharaoh.toFixed(2));
+      dividendChart.data.datasets[1].data = data.map(d => d.velodrome.toFixed(2));
+      dividendChart.update();
+
+      // Table
+      const tbody = document.getElementById('dividendTable');
+      tbody.innerHTML = '';
+      data.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-2">${d.week}</td>
+          <td class="p-2 text-right">${d.pharaoh.toFixed(2)}</td>
+          <td class="p-2 text-right">${d.velodrome.toFixed(2)}</td>
+          <td class="p-2 text-right font-semibold">${d.total.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
-    // ——— Wire Up Buttons ———
-    document.getElementById('refreshPrice').onclick = () => {
-      const sym = document.getElementById('symbol').value;
-      fetchPrice(sym);
-    };
-    document.getElementById('saveDiv').onclick = () => {
-      const date = document.getElementById('divDate').value;
-      const amt  = document.getElementById('divAmount').value;
-      if (!date || !amt) return alert('Pick date & amount');
-      addDividend(date, amt);
+    // ——— Wire Up “Add” Button ———
+    document.getElementById('addBtn').addEventListener('click', () => {
+      const date    = document.getElementById('divDate').value;
+      const crypto  = document.getElementById('cryptoSelect').value;
+      const amount  = parseFloat(document.getElementById('divAmount').value);
+      if (!date || !crypto || isNaN(amount)) {
+        return alert('Please select a crypto, date, and enter a valid amount.');
+      }
+      const arr = loadDivs();
+      arr.push({ date, crypto, amount });
+      saveDivs(arr);
+      render();
+      // reset inputs
       document.getElementById('divAmount').value = '';
-    };
+    });
 
     // ——— On Load ———
-    document.getElementById('divDate').value = new Date().toISOString().slice(0,10);
-    fetchPrice(document.getElementById('symbol').value);
-    drawChart();
-
+    document.getElementById('divDate').value = new Date().toISOString().slice(0, 10);
+    render();
   </script>
 </body>
 </html>
