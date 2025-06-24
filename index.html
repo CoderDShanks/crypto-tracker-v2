@@ -29,7 +29,6 @@
       color: var(--text-primary);
     }
     
-    /* Subtle animated grid background for a "premium tech" feel */
     body::before {
         content: '';
         position: absolute;
@@ -54,11 +53,11 @@
       height: 100%;
       padding: 1.5rem;
       box-sizing: border-box;
-      overflow-y: auto; /* Allow scrolling on small screens */
-      -ms-overflow-style: none; /* IE and Edge */
-      scrollbar-width: none; /* Firefox */
+      overflow-y: auto;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
-    .container::-webkit-scrollbar { display: none; } /* Chrome, Safari, Opera */
+    .container::-webkit-scrollbar { display: none; }
 
     /* ─── Header & Typography ──────────────────────────────────────── */
     h1 {
@@ -75,7 +74,7 @@
       margin-bottom: 2rem;
       font-weight: 400;
     }
-    h2 { font-weight: 600; font-size: 1.25rem; margin-top:0; }
+    h2 { font-weight: 600; font-size: 1.25rem; margin-top:0; margin-bottom: 1rem; }
 
     /* ─── Matt Panel Styling ───────────────────────────────────────── */
     .panel {
@@ -87,6 +86,7 @@
       box-shadow: 0 8px 32px rgba(0,0,0,0.2);
       animation: panel-fade-in 0.6s ease-out forwards;
       opacity: 0;
+      flex-shrink: 0; /* Prevent smaller panels from shrinking */
     }
     
     @keyframes panel-fade-in {
@@ -94,14 +94,19 @@
       to   { opacity: 1; transform: translateY(0); }
     }
     
-    /* Staggered animation delay for panels */
     #chartPanel { animation-delay: 0.1s; }
     #controls { animation-delay: 0.2s; }
     .panel:last-child { animation-delay: 0.3s; }
 
-    /* ─── Chart Panel (Taller) ─────────────────────────────────────── */
+    /* ─── Chart Panel (Bigger & Flexible) ──────────────────────────── */
+    #chartPanel {
+        flex-grow: 1; /* Allow this panel to grow and take up space */
+        min-height: 350px; /* Set a minimum height */
+        display: flex;
+        flex-direction: column;
+    }
     #chartContainer {
-        height: 280px; /* Made slightly taller as requested */
+        flex-grow: 1; /* Allow the chart canvas container to fill the panel */
     }
     canvas { width:100% !important; height:100% !important; }
 
@@ -249,16 +254,30 @@
     })();
     let current = epochs.indexOf(keyFmt(epochStart(new Date())));
 
-    // Chart.js - Themed for new minimal design
+    // =================================================================
+    // Chart.js - UPDATED for Stacked Bars
+    // =================================================================
     const ctx = document.getElementById('chart').getContext('2d');
     const chart = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: [],
+        // REMOVED 'Total' dataset, now we only have the stackable parts
         datasets: [
-          { label: 'Total',     data: [], backgroundColor:'rgba(56, 122, 223, 0.7)', borderColor: 'rgba(56, 122, 223, 1)', borderWidth:1 },
-          { label: 'Pharaoh',   data: [], backgroundColor:'rgba(236,72,153,0.7)', borderColor: '#ec4899', borderWidth:1 },
-          { label: 'Velodrome', data: [], backgroundColor:'rgba(80, 200, 120, 0.7)', borderColor: '#50C878', borderWidth:1 } // Changed Velodrome to a green
+          { 
+            label: 'Pharaoh',
+            data: [], 
+            backgroundColor:'rgba(236,72,153,0.8)', // Pink
+            borderColor: '#ec4899', 
+            borderWidth: 1 
+          },
+          { 
+            label: 'Velodrome', 
+            data: [], 
+            backgroundColor:'rgba(80, 200, 120, 0.8)', // Green
+            borderColor: '#50C878', 
+            borderWidth: 1 
+          }
         ]
       },
       options: {
@@ -266,8 +285,17 @@
         maintainAspectRatio: false,
         layout: { padding: 8 },
         scales: {
-          x: { ticks: { color: 'var(--text-secondary)', font: { family: "'Inter', sans-serif" } }, grid: { display: false } },
-          y: { beginAtZero: true, ticks: { color: 'var(--text-secondary)', font: { family: "'Inter', sans-serif" } }, grid: { color: 'rgba(255, 255, 255, 0.05)' } }
+          x: { 
+            stacked: true, // ADDED: This enables stacking on the x-axis
+            ticks: { color: 'var(--text-secondary)', font: { family: "'Inter', sans-serif" } }, 
+            grid: { display: false } 
+          },
+          y: { 
+            stacked: true, // ADDED: This enables stacking on the y-axis
+            beginAtZero: true, 
+            ticks: { color: 'var(--text-secondary)', font: { family: "'Inter', sans-serif" } }, 
+            grid: { color: 'rgba(255, 255, 255, 0.05)' } 
+          }
         },
         plugins: {
           tooltip: {
@@ -292,9 +320,9 @@
     function render() {
       const arr = prepare();
       chart.data.labels = arr.map(x => `Epoch ${x.idx}`);
-      chart.data.datasets[0].data = arr.map(x => x.total);
-      chart.data.datasets[1].data = arr.map(x => x.pharaoh);
-      chart.data.datasets[2].data = arr.map(x => x.velodrome);
+      // Update the two datasets for the stacked chart
+      chart.data.datasets[0].data = arr.map(x => x.pharaoh);
+      chart.data.datasets[1].data = arr.map(x => x.velodrome);
       chart.update();
 
       document.getElementById('epochNum').textContent   = `Epoch #${arr[current].idx}`;
