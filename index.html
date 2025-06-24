@@ -2,120 +2,83 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Epoch Dividend Tracker</title>
+  <title>Crypto Dividend Tracker</title>
   <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-  <!-- Tailwind & Fonts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&family=Plus+Jakarta+Sans:wght@300;500&display=swap" rel="stylesheet">
   <style>
-    /* Body with subtle radial backlight */
     body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      min-height: 100vh; margin:0;
-      background: #0d0b13;
-      background-image:
-        radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 70%);
-      color: #e5e7eb;
-      padding: 1rem;
+      @apply bg-[#0b0a0f] text-gray-200 font-[PlusJakartaSans] min-h-screen p-6;
+      background-image: radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 70%);
     }
-    h1 {
-      font-family: 'Inter', sans-serif;
-      text-align: center; margin-bottom:1rem;
-      font-size: 1.75rem; color:#fdfdfd;
-      text-shadow: 0 0 6px rgba(0,0,0,0.8);
-    }
-    /* Glass card base */
+    h1 { @apply text-4xl font-[Inter] text-center mb-1 text-white drop-shadow-lg; }
+    h2 { @apply text-xl font-semibold text-white mb-4; }
     .glass {
-      position: relative;
-      background: rgba(255,255,255,0.08);
-      backdrop-filter: blur(24px);
-      border-radius: 1rem;
-      overflow: hidden;
-      transition: box-shadow 0.4s ease;
+      @apply relative bg-white/5 backdrop-blur-lg rounded-2xl overflow-hidden transition-shadow;
     }
-    /* Shine stripe pseudo-element */
+    .glass:hover { @apply shadow-2xl; }
     .glass::before {
-      content: "";
-      position: absolute; top: -50%; left: -50%;
-      width: 200%; height: 200%;
-      background: linear-gradient(
-        120deg,
-        rgba(255,255,255,0.2) 0%,
-        rgba(255,255,255,0) 60%
-      );
-      transform: rotate(25deg) translateX(-200%);
-      transition: transform 0.7s ease;
+      content:""; @apply absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 transition-opacity;
     }
-    .glass:hover {
-      box-shadow: 0 12px 48px rgba(0,0,0,0.7);
-    }
-    .glass:hover::before {
-      transform: rotate(25deg) translateX(200%);
-    }
-    /* Buttons */
-    .btn {
-      cursor:pointer; user-select:none;
-      transition: transform 0.1s, box-shadow 0.2s;
-    }
-    .btn:active { transform: scale(0.95); }
-    .btn-primary {
-      @apply px-4 py-2 rounded-lg font-semibold text-white
-              bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg;
-    }
-    .btn-primary:hover {
-      @apply from-indigo-700 to-purple-700 shadow-2xl;
-    }
+    .glass:hover::before { @apply opacity-20; }
+    .btn { @apply cursor-pointer select-none transition-transform; }
+    .btn:active { @apply scale-95; }
     .btn-circle {
-      @apply w-10 h-10 bg-white/10 text-white text-lg font-bold
-              rounded-full flex items-center justify-center shadow-md;
+      @apply w-10 h-10 bg-white/10 text-white text-lg font-bold rounded-full flex items-center justify-center transition-shadow;
     }
-    .btn-circle:hover { @apply bg-white/20 shadow-lg; }
-    /* Inputs & selects */
+    .btn-circle:hover { @apply bg-white/20 shadow; }
+    .btn-primary {
+      @apply px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold shadow-lg transition-shadow;
+    }
+    .btn-primary:hover { @apply shadow-2xl; }
     select, input {
-      @apply w-full rounded-lg px-3 py-2
-              bg-white/20 border border-white/30
-              text-white placeholder-gray-200
-              focus:outline-none focus:ring-2 focus:ring-indigo-500;
+      @apply w-full bg-white/10 border border-white/30 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500;
       font-size: 0.95rem;
-      text-shadow: 0 0 2px rgba(0,0,0,0.7);
     }
-    select { -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='5'><path fill='white' d='M0,0 L5,5 L10,0 Z'/></svg>"); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 0.6rem; }
-    /* Logo */
-    .logo { height: 48px; filter: drop-shadow(0 0 6px rgba(0,0,0,0.8)); }
+    /* small arrow for select */
+    select { background-image: url("data:image/svg+xml;charset=UTF-8,<svg fill='white' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path d='M2 5L0 0h4z'/></svg>"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 0.6rem; -moz-appearance:none; -webkit-appearance:none; appearance:none; }
+    .logo { height: 56px; filter: drop-shadow(0 0 6px rgba(0,0,0,0.7)); }
   </style>
 </head>
 <body>
-  <h1>Epoch Dividend Tracker</h1>
-
-  <!-- Logos -->
+  <!-- Top Logos -->
   <div class="flex justify-center space-x-8 mb-6">
-    <img src="pharaoh-logo.png" alt="Pharaoh Logo" class="logo"/>
-    <img src="velodrome-logo.png" alt="Velodrome Logo" class="logo"/>
+    <img src="pharaoh-logo.png" alt="Pharaoh" class="logo"/>
+    <img src="velodrome-logo.png" alt="Velodrome" class="logo"/>
   </div>
+  <!-- Title -->
+  <h1>Crypto Dividend Tracker</h1>
+  <p class="text-center text-gray-400 mb-8">Track your earnings across epochs with a modern glass design</p>
 
-  <!-- Chart -->
-  <div class="glass p-6 mb-6">
+  <!-- Chart Section -->
+  <div class="glass p-6 mb-8">
+    <h2>Dividend Performance</h2>
     <canvas id="divChart"></canvas>
   </div>
 
-  <!-- Controls -->
-  <div class="glass p-6 mb-6 space-y-4">
+  <!-- Controls Section -->
+  <div class="glass p-6 mb-8 space-y-4">
+    <!-- Epoch Controls -->
     <div class="flex justify-end space-x-2">
-      <button id="deletePrevEpoch" class="btn btn-circle" title="Remove oldest epoch">−</button>
-      <button id="addPrevEpoch"    class="btn btn-circle" title="Add previous epoch">＋</button>
-      <button id="addNextEpoch"    class="btn btn-circle" title="Add next epoch">＋</button>
-      <button id="deleteNextEpoch" class="btn btn-circle" title="Remove latest epoch">−</button>
+      <button id="deletePrevEpoch" class="btn btn-circle" title="Remove oldest">−</button>
+      <button id="addPrevEpoch"    class="btn btn-circle" title="Add previous">＋</button>
+      <button id="addNextEpoch"    class="btn btn-circle" title="Add next">＋</button>
+      <button id="deleteNextEpoch" class="btn btn-circle" title="Remove latest">−</button>
     </div>
+    <!-- Epoch Navigator -->
     <div class="flex justify-center items-center space-x-4">
       <button id="prevEpoch" class="btn btn-circle">&lt;</button>
-      <div id="epochNumber" class="text-lg font-medium">Epoch #1</div>
+      <div id="epochNumber" class="text-xl font-medium">Epoch #1</div>
       <button id="nextEpoch" class="btn btn-circle">&gt;</button>
     </div>
-    <div id="epochRange" class="text-center text-gray-300">Loading…</div>
+    <div id="epochRange" class="text-center text-gray-400">Loading…</div>
+    <!-- Input Grid -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
       <div>
-        <label class="block mb-1 text-gray-300">Crypto</label>
+        <label class="block mb-1">Select Crypto</label>
         <select id="cryptoSelect">
           <option value="" disabled selected>Choose…</option>
           <option value="pharaoh">Pharaoh</option>
@@ -123,14 +86,14 @@
         </select>
       </div>
       <div class="md:col-span-2">
-        <label class="block mb-1 text-gray-300">Amount (USD)</label>
-        <input id="divAmount" type="number" step="0.01" placeholder="e.g. 15.50"/>
+        <label class="block mb-1">USD Amount</label>
+        <input id="divAmount" type="number" step="0.01" placeholder="e.g. 12.50"/>
       </div>
-      <button id="addBtn" class="btn btn-primary">Add / Update</button>
+      <button id="addBtn" class="btn-primary">Add / Update</button>
     </div>
   </div>
 
-  <!-- Table -->
+  <!-- Table Section -->
   <div class="glass p-4">
     <table class="w-full text-sm">
       <thead class="text-gray-400">
@@ -145,9 +108,99 @@
     </table>
   </div>
 
-  <script defer>
+  <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // ... your existing JS (epoch logic + Chart.js) goes here exactly as before ...
+    // Data & util functions
+    const LS='dividends';
+    const load=()=>JSON.parse(localStorage.getItem(LS)||'{}');
+    const save=o=>localStorage.setItem(LS, JSON.stringify(o));
+    const epochStart=d=>{ const day=d.getDay(), diff=day>=4?day-4:day+3; const s=new Date(d); s.setDate(d.getDate()-diff); return new Date(s.getFullYear(),s.getMonth(),s.getDate()); };
+    const fmtKey=d=>d.toISOString().slice(0,10);
+    const fmtLabel=s=>{ const e=new Date(s); e.setDate(s.getDate()+6); const opts={month:'short',day:'numeric'}; return `${s.toLocaleDateString(undefined,opts)}–${e.toLocaleDateString(undefined,opts)}, ${e.getFullYear()}`; };
+
+    // Manage epoch keys
+    let epochKeys = (()=>{ const data=load(), keys=Object.keys(data); const curr=fmtKey(epochStart(new Date())); if(!keys.includes(curr)) keys.push(curr); return keys.sort(); })();
+
+    function addEpoch(dir){
+      const sorted=[...epochKeys].sort();
+      const ref = dir==='prev'?sorted[0]:sorted[sorted.length-1];
+      let d=new Date(ref); d.setDate(d.getDate() + (dir==='prev'?-7:7));
+      const k=fmtKey(d);
+      if(!epochKeys.includes(k)) epochKeys.push(k);
+      current = epochKeys.indexOf(k);
+      render();
+    }
+    function delEpoch(dir){
+      if(epochKeys.length<=1) return;
+      const sorted=[...epochKeys].sort();
+      const t = dir==='prev'?sorted[0]:sorted[sorted.length-1];
+      epochKeys = epochKeys.filter(k=>k!==t);
+      if(current>=epochKeys.length) current=epochKeys.length-1;
+      render();
+    }
+
+    function prepare(){
+      const data=load();
+      return [...epochKeys].sort().map((k,i)=>{ const v=data[k]||{pharaoh:0,velodrome:0}; return { key:k, idx:i+1, label:fmtLabel(new Date(k)), pharaoh:v.pharaoh, velodrome:v.velodrome, total:v.pharaoh+v.velodrome }; });
+    }
+
+    // Chart.js
+    const ctx=document.getElementById('divChart').getContext('2d');
+    const chart=new Chart(ctx,{
+      type:'line',
+      data:{ labels:[], datasets:[
+        { label:'Total',     data:[], borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,0.2)', fill:true,  tension:0.4, pointRadius:4 },
+        { label:'Pharaoh',   data:[], borderColor:'#ec4899', backgroundColor:'rgba(236,72,153,0.2)', fill:false, tension:0.4, pointRadius:3 },
+        { label:'Velodrome', data:[], borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.2)', fill:false, tension:0.4, pointRadius:3 }
+      ]]},
+      options:{ responsive:true, scales:{
+        x:{ title:{display:true,text:'Epoch #'}, ticks:{color:'#cbd5e1',callback:v=>'#'+v}, grid:{color:'rgba(203,213,225,0.1)'} },
+        y:{ ticks:{color:'#cbd5e1'}, grid:{color:'rgba(203,213,225,0.1)'}, beginAtZero:true }
+      }, plugins:{ tooltip:{ callbacks:{ title(ctx){ return prepare()[ctx[0].dataIndex].label; }}}, legend:{ labels:{color:'#f8fafc'} } } }
+    });
+
+    let current = epochKeys.indexOf(fmtKey(epochStart(new Date())));
+
+    function render(){
+      const arr = prepare();
+      chart.data.labels = arr.map(d=>d.idx);
+      chart.data.datasets.forEach((ds,i)=> ds.data = arr.map(d=> [d.total,d.pharaoh,d.velodrome][i].toFixed(2)) );
+      chart.update();
+
+      // UI updates
+      document.getElementById('epochNumber').textContent = `Epoch #${arr[current].idx}`;
+      document.getElementById('epochRange').textContent  = arr[current].label;
+      document.getElementById('prevEpoch').disabled = current===0;
+      document.getElementById('nextEpoch').disabled = current===arr.length-1;
+      // table
+      document.getElementById('divTable').innerHTML = arr.map(d=>`
+        <tr>
+          <td class="p-2">#${d.idx}</td>
+          <td class="p-2 text-right text-pink-400">${d.pharaoh.toFixed(2)}</td>
+          <td class="p-2 text-right text-blue-400">${d.velodrome.toFixed(2)}</td>
+          <td class="p-2 text-right font-semibold">${d.total.toFixed(2)}</td>
+        </tr>
+      `).join('');
+    }
+
+    // events
+    document.getElementById('addPrevEpoch').onclick    = ()=>addEpoch('prev');
+    document.getElementById('addNextEpoch').onclick    = ()=>addEpoch('next');
+    document.getElementById('deletePrevEpoch').onclick = ()=>delEpoch('prev');
+    document.getElementById('deleteNextEpoch').onclick = ()=>delEpoch('next');
+    document.getElementById('prevEpoch').onclick       = ()=>{ if(current>0) current--; render(); };
+    document.getElementById('nextEpoch').onclick       = ()=>{ if(current<epochKeys.length-1) current++; render(); };
+    document.getElementById('addBtn').onclick          = ()=>{
+      const c=document.getElementById('cryptoSelect').value;
+      const a=parseFloat(document.getElementById('divAmount').value);
+      if(!c||isNaN(a)) return alert('Select crypto & enter amount.');
+      const k=epochKeys[current], data=load();
+      data[k]??={pharaoh:0,velodrome:0}; data[k][c]+=a; save(data);
+      document.getElementById('divAmount').value=''; render();
+    };
+
+    // initial
+    render();
   });
   </script>
 </body>
