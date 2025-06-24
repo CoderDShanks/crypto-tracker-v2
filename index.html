@@ -12,7 +12,9 @@
     :root {
       --background: #111113;
       --surface: #1C1C1E;
-      --primary: #387ADF; /* A calm, elegant blue */
+      --primary: #387ADF; /* Blue for Ramses */
+      --yellow: #FFD700;  /* Yellow for Pharaoh */
+      --red: #EF4444;     /* Red for Velodrome */
       --text-primary: #F1F1F1;
       --text-secondary: #8E8E93;
       --border: #3A3A3C;
@@ -97,9 +99,9 @@
     #controls { animation-delay: 0.2s; }
     .panel:last-child { animation-delay: 0.3s; }
 
-    /* ─── Chart Panel (Resized) ────────────────────────────────────── */
+    /* ─── Chart Panel ──────────────────────────────────────────────── */
     #chartContainer {
-        height: 320px; /* Adjusted to a "medium" height */
+        height: 320px; 
     }
     canvas { width:100% !important; height:100% !important; }
 
@@ -200,6 +202,7 @@
       <div class="grid">
         <select id="crypto">
           <option value="">Choose Crypto</option>
+          <option value="ramses">Ramses</option>
           <option value="pharaoh">Pharaoh</option>
           <option value="velodrome">Velodrome</option>
         </select>
@@ -211,7 +214,7 @@
     <div class="panel">
       <table>
         <thead>
-          <tr><th>Epoch #</th><th>Pharaoh</th><th>Velodrome</th><th>Total</th></tr>
+          <tr><th>Epoch #</th><th>Ramses</th><th>Pharaoh</th><th>Velodrome</th><th>Total</th></tr>
         </thead>
         <tbody id="tableBody"></tbody>
       </table>
@@ -248,7 +251,7 @@
     let current = epochs.indexOf(keyFmt(epochStart(new Date())));
 
     // =================================================================
-    // Chart.js - CONFIGURED for hybrid stacked/normal bars
+    // Chart.js - CONFIGURED for true stacked chart
     // =================================================================
     const ctx = document.getElementById('chart').getContext('2d');
     const chart = new Chart(ctx, {
@@ -257,28 +260,25 @@
         labels: [],
         datasets: [
           { 
-            label: 'Total',
+            label: 'Ramses',
             data: [], 
-            backgroundColor:'rgba(56, 122, 223, 0.7)', 
-            borderColor: 'rgba(56, 122, 223, 1)', 
-            borderWidth:1,
-            stack: 'B' // Assign to its own stack
+            backgroundColor:'rgba(56, 122, 223, 0.8)', // Blue
+            borderColor: 'var(--primary)', 
+            borderWidth: 1 
           },
           { 
             label: 'Pharaoh',
             data: [], 
-            backgroundColor:'rgba(236,72,153,0.8)',
-            borderColor: '#ec4899', 
-            borderWidth: 1,
-            stack: 'A' // Assign to the component stack
+            backgroundColor:'rgba(255, 215, 0, 0.8)', // Yellow
+            borderColor: 'var(--yellow)', 
+            borderWidth: 1
           },
           { 
             label: 'Velodrome', 
             data: [], 
-            backgroundColor:'rgba(80, 200, 120, 0.8)',
-            borderColor: '#50C878', 
-            borderWidth: 1,
-            stack: 'A' // Assign to the component stack
+            backgroundColor:'rgba(239, 68, 68, 0.8)', // Red
+            borderColor: 'var(--red)', 
+            borderWidth: 1
           }
         ]
       },
@@ -288,14 +288,18 @@
         layout: { padding: 8 },
         scales: {
           x: { 
-            stacked: true, // Keep stacking enabled
+            stacked: true, 
             ticks: { color: 'var(--text-secondary)', font: { family: "'Inter', sans-serif" } }, 
             grid: { display: false } 
           },
           y: { 
-            stacked: true, // Keep stacking enabled
+            stacked: true, 
             beginAtZero: true, 
-            ticks: { color: 'var(--text-secondary)', font: { family: "'Inter', sans-serif" } }, 
+            ticks: { 
+                color: 'var(--text-secondary)', font: { family: "'Inter', sans-serif" },
+                // Format Y-axis ticks as currency
+                callback: function(value) { return '$' + value; }
+            }, 
             grid: { color: 'rgba(255, 255, 255, 0.05)' } 
           }
         },
@@ -314,15 +318,24 @@
     function prepare() {
       const d = loadData();
       return epochs.map((k,i) => {
-        const v = d[k] || { pharaoh:0, velodrome:0 };
-        return { key: k, idx: i+1, label: labelFmt(new Date(k)), pharaoh: v.pharaoh, velodrome: v.velodrome, total: v.pharaoh+v.velodrome };
+        // Updated to handle Ramses
+        const v = d[k] || { ramses: 0, pharaoh:0, velodrome:0 };
+        return { 
+            key: k, idx: i+1, 
+            label: labelFmt(new Date(k)), 
+            ramses: v.ramses || 0,
+            pharaoh: v.pharaoh || 0,
+            velodrome: v.velodrome || 0,
+            total: (v.ramses || 0) + (v.pharaoh || 0) + (v.velodrome || 0) 
+        };
       });
     }
 
     function render() {
       const arr = prepare();
       chart.data.labels = arr.map(x => `Epoch ${x.idx}`);
-      chart.data.datasets[0].data = arr.map(x => x.total);
+      // Updated to populate three datasets for the stacked chart
+      chart.data.datasets[0].data = arr.map(x => x.ramses);
       chart.data.datasets[1].data = arr.map(x => x.pharaoh);
       chart.data.datasets[2].data = arr.map(x => x.velodrome);
       chart.update();
@@ -334,11 +347,13 @@
       
       const formatCurrency = (num) => `$${num.toFixed(2)}`;
       
+      // Updated to include Ramses in the table
       document.getElementById('tableBody').innerHTML = arr.map(x => `
         <tr>
           <td>${x.idx}</td>
-          <td style="color:#ec4899;">${formatCurrency(x.pharaoh)}</td>
-          <td style="color:#50C878;">${formatCurrency(x.velodrome)}</td>
+          <td style="color:var(--primary);">${formatCurrency(x.ramses)}</td>
+          <td style="color:var(--yellow);">${formatCurrency(x.pharaoh)}</td>
+          <td style="color:var(--red);">${formatCurrency(x.velodrome)}</td>
           <td style="font-weight:600; color: var(--text-primary);">${formatCurrency(x.total)}</td>
         </tr>
       `).reverse().join('');
@@ -356,7 +371,8 @@
       const a = parseFloat(document.getElementById('amount').value);
       if(!c||isNaN(a)) return alert('Please select a crypto and enter a valid amount.');
       let d = loadData(), k=epochs[current];
-      d[k] = d[k]||{pharaoh:0,velodrome:0};
+      // Updated to handle Ramses
+      d[k] = d[k]||{ ramses: 0, pharaoh:0, velodrome:0 };
       d[k][c] = a;
       saveData(d); document.getElementById('amount').value=''; render();
     };
