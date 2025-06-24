@@ -3,40 +3,47 @@
 <head>
   <meta charset="UTF-8"/>
   <title>Crypto Dividend Tracker</title>
-  <!-- Chart.js UMD bundle -->
+  <!-- Chart.js bundle -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" defer></script>
   <!-- Luxury Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Raleway:wght@300;500&display=swap" rel="stylesheet">
   <style>
-    /* ── Fullscreen Animated Background + Texture ───────────────────── */
+    /* ── Full-screen Animated Gradient Background ───────────────────── */
     html, body {
-      height: 100%; margin:0; padding:0; overflow:hidden;
-      background-image:
-        url('https://www.transparenttextures.com/patterns/asfalt-dark.png'),
-        linear-gradient(-45deg, #0d0b13, #1a1a23, #0d0b13, #1a1a23');
-      background-size: auto, 400% 400%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: linear-gradient(-45deg, #0d0b13, #1a1a23, #0d0b13, #1a1a23);
+      background-size: 400% 400%;
       animation: bgWave 25s ease infinite;
       font-family: 'Raleway', sans-serif;
       color: #fff;
     }
     @keyframes bgWave {
-      0%   { background-position: 0% 0%, 0% 50%; }
-      50%  { background-position: 0% 0%, 100% 50%; }
-      100% { background-position: 0% 0%, 0% 50%; }
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
     .container {
-      display: flex; flex-direction: column; height: 100%;
-      padding: 1.5rem; box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 1.5rem;
+      box-sizing: border-box;
     }
 
     /* ── Header ───────────────────────────────────────────────────── */
     h1 {
       font-family: 'Playfair Display', serif;
-      font-size: 2.25rem; text-align: center;
-      margin-bottom: .5rem; text-shadow: 0 0 6px rgba(0,0,0,0.8);
+      font-size: 2.25rem;
+      text-align: center;
+      margin-bottom: .5rem;
+      text-shadow: 0 0 6px rgba(0,0,0,0.8);
     }
     p.subtitle {
-      text-align: center; color: rgba(255,255,255,0.7);
+      text-align: center;
+      color: rgba(255,255,255,0.7);
       margin-bottom: 1rem;
     }
 
@@ -61,13 +68,11 @@
         0 0 30px rgba(212,175,55,0.7);
     }
     .glass::before {
-      content:"";
-      position:absolute; top:-40%; left:-40%;
-      width:180%; height:180%;
-      background: url('data:image/svg+xml;utf8,\
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" fill-opacity="0.03">\
-<circle cx="100" cy="100" r="100" fill="white"/></svg>')
-        center/cover no-repeat;
+      content: "";
+      position: absolute;
+      top: -40%; left: -40%;
+      width: 180%; height: 180%;
+      background: radial-gradient(circle, rgba(255,255,255,0.3) 10%, transparent 60%);
       transform: translateX(-100%) rotate(30deg);
       transition: transform .8s ease, opacity .8s ease;
       opacity: 0;
@@ -79,7 +84,7 @@
 
     /* ── Chart Panel ───────────────────────────────────────────────── */
     #chartPanel { flex: 0 0 auto; }
-    #chartContainer { height: 240px; /* taller */ }
+    #chartContainer { height: 240px; }
     canvas { width:100% !important; height:100% !important; }
 
     /* ── Controls Panel ─────────────────────────────────────────────── */
@@ -93,8 +98,10 @@
     /* ── Buttons & Inputs ─────────────────────────────────────────── */
     .btn {
       background: linear-gradient(90deg,#D4AF37,#FFD700);
-      color: #0d0b13; border:none; border-radius:8px;
-      padding:.6rem 1.2rem; font-size:1rem; cursor:pointer;
+      color: #0d0b13;
+      border: none; border-radius:8px;
+      padding:.6rem 1.2rem; font-size:1rem;
+      cursor:pointer;
       box-shadow:
         0 4px 16px rgba(0,0,0,0.5),
         0 0 8px rgba(212,175,55,0.7);
@@ -147,8 +154,7 @@
       font-family:'Raleway',sans-serif; font-size:.9rem;
     }
     th, td {
-      padding:.6rem 1rem;
-      border-bottom:1px solid rgba(255,255,255,0.2);
+      padding:.6rem 1rem; border-bottom:1px solid rgba(255,255,255,0.2);
     }
     th { text-align:left; color:rgba(255,255,255,0.7); }
     td { text-align:right; }
@@ -158,7 +164,7 @@
 <body>
   <div class="container">
     <h1>Crypto Dividend Tracker</h1>
-    <p class="subtitle">Luxurious wave‐animated texture & gold‐edged glass UI</p>
+    <p class="subtitle">Luxurious wave-animated gradient & gold-edged glass UI</p>
 
     <!-- Dividend Performance (Bar Chart) -->
     <div id="chartPanel" class="glass">
@@ -209,21 +215,21 @@
     const saveData = d => localStorage.setItem(STORAGE, JSON.stringify(d));
 
     function epochStart(d) {
-      const day=d.getDay(), diff=day>=4?day-4:day+3;
-      const s=new Date(d); s.setDate(d.getDate()-diff);
+      const day = d.getDay(), diff = day>=4 ? day-4 : day+3;
+      const s = new Date(d); s.setDate(d.getDate()-diff);
       return new Date(s.getFullYear(),s.getMonth(),s.getDate());
     }
-    const keyFmt = d=>d.toISOString().slice(0,10);
+    const keyFmt = d => d.toISOString().slice(0,10);
     function labelFmt(s) {
-      const e=new Date(s); e.setDate(s.getDate()+6);
+      const e = new Date(s); e.setDate(s.getDate()+6);
       const o={month:'short',day:'numeric'};
       return `${s.toLocaleDateString(undefined,o)}–${e.toLocaleDateString(undefined,o)}, ${e.getFullYear()}`;
     }
 
-    let epochs = (()=> {
-      const d=loadData(), ks=Object.keys(d);
-      const cur=keyFmt(epochStart(new Date()));
-      if(!ks.includes(cur)) ks.push(cur);
+    let epochs = (() => {
+      const d = loadData(), ks = Object.keys(d);
+      const cur = keyFmt(epochStart(new Date()));
+      if (!ks.includes(cur)) ks.push(cur);
       return ks.sort();
     })();
     let current = epochs.indexOf(keyFmt(epochStart(new Date())));
@@ -231,54 +237,52 @@
     // Chart.js Bar Chart
     const ctx = document.getElementById('chart').getContext('2d');
     const chart = new Chart(ctx, {
-      type:'bar',
-      data:{ labels:[], datasets:[
-        { label:'Total',     data:[], backgroundColor:'rgba(212,175,55,0.6)', borderColor:'#D4AF37', borderWidth:1 },
-        { label:'Pharaoh',   data:[], backgroundColor:'rgba(236,72,153,0.6)', borderColor:'#ec4899', borderWidth:1 },
-        { label:'Velodrome', data:[], backgroundColor:'rgba(59,130,246,0.6)', borderColor:'#3b82f6', borderWidth:1 }
-      ]},
-      options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        layout:{ padding:8 },
-        scales:{
-          x:{ title:{display:true,text:'Epoch #',color:'#D4AF37'}, ticks:{color:'#D4AF37'}, grid:{display:false} },
-          y:{ beginAtZero:true, title:{display:true,text:'Dividends (USD)',color:'#D4AF37'}, ticks:{color:'#D4AF37'}, grid:{color:'rgba(212,175,55,0.2)'} }
+      type: 'bar',
+      data: {
+        labels: [], 
+        datasets: [
+          { label: 'Total',     data: [], backgroundColor:'rgba(212,175,55,0.6)', borderColor:'#D4AF37', borderWidth:1 },
+          { label: 'Pharaoh',   data: [], backgroundColor:'rgba(236,72,153,0.6)', borderColor:'#ec4899', borderWidth:1 },
+          { label: 'Velodrome', data: [], backgroundColor:'rgba(59,130,246,0.6)', borderColor:'#3b82f6', borderWidth:1 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: 8 },
+        scales: {
+          x: { title: { display: true, text: 'Epoch #', color: '#D4AF37' }, ticks: { color: '#D4AF37' }, grid: { display: false } },
+          y: { beginAtZero: true, title: { display: true, text: 'Dividends (USD)', color: '#D4AF37' }, ticks: { color: '#D4AF37' }, grid: { color: 'rgba(212,175,55,0.2)' } }
         },
-        plugins:{
-          tooltip:{ backgroundColor:'rgba(0,0,0,0.8)', titleColor:'#FFD700', bodyColor:'#fff',
-            callbacks:{ title:ctx=>prepare()[ctx[0].dataIndex].label }
-          },
-          legend:{ labels:{color:'#FFD700'} }
+        plugins: {
+          tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', titleColor: '#FFD700', bodyColor: '#fff', callbacks: { title: ctx => prepare()[ctx[0].dataIndex].label } },
+          legend: { labels: { color: '#FFD700' } }
         }
       }
     });
 
     function prepare() {
-      const d=loadData();
-      return epochs.map((k,i)=> {
-        const v=d[k]||{pharaoh:0,velodrome:0};
-        return {
-          key:k, idx:i+1, label:labelFmt(new Date(k)),
-          pharaoh:v.pharaoh, velodrome:v.velodrome, total:v.pharaoh+v.velodrome
-        };
+      const d = loadData();
+      return epochs.map((k,i) => {
+        const v = d[k] || { pharaoh:0, velodrome:0 };
+        return { key: k, idx: i+1, label: labelFmt(new Date(k)), pharaoh: v.pharaoh, velodrome: v.velodrome, total: v.pharaoh+v.velodrome };
       });
     }
 
     function render() {
-      const arr=prepare();
-      chart.data.labels = arr.map(x=>x.idx);
-      chart.data.datasets[0].data = arr.map(x=>x.total);
-      chart.data.datasets[1].data = arr.map(x=>x.pharaoh);
-      chart.data.datasets[2].data = arr.map(x=>x.velodrome);
+      const arr = prepare();
+      chart.data.labels = arr.map(x => x.idx);
+      chart.data.datasets[0].data = arr.map(x => x.total);
+      chart.data.datasets[1].data = arr.map(x => x.pharaoh);
+      chart.data.datasets[2].data = arr.map(x => x.velodrome);
       chart.update();
 
       document.getElementById('epochNum').textContent   = `Epoch #${arr[current].idx}`;
       document.getElementById('epochRange').textContent = arr[current].label;
-      document.getElementById('prev').disabled = (current===0);
-      document.getElementById('next').disabled = (current===arr.length-1);
+      document.getElementById('prev').disabled = (current === 0);
+      document.getElementById('next').disabled = (current === arr.length-1);
 
-      document.getElementById('tableBody').innerHTML = arr.map(x=>`
+      document.getElementById('tableBody').innerHTML = arr.map(x => `
         <tr>
           <td>${x.idx}</td>
           <td style="color:#ec4899;">${x.pharaoh.toFixed(2)}</td>
@@ -289,29 +293,19 @@
     }
 
     // Controls
-    document.getElementById('addPrev').onclick = ()=>{
-      const d=new Date(epochs[0]); d.setDate(d.getDate()-7);
-      epochs.unshift(keyFmt(d)); current=0; render();
-    };
-    document.getElementById('delPrev').onclick = ()=>{
-      if(epochs.length>1){ epochs.shift(); if(current>0) current--; render(); }
-    };
-    document.getElementById('addNext').onclick = ()=>{
-      const d=new Date(epochs[epochs.length-1]); d.setDate(d.getDate()+7);
-      epochs.push(keyFmt(d)); current=epochs.length-1; render();
-    };
-    document.getElementById('delNext').onclick = ()=>{
-      if(epochs.length>1){ epochs.pop(); if(current>=epochs.length) current=epochs.length-1; render(); }
-    };
-    document.getElementById('prev').onclick = ()=>{ if(current>0) current--; render(); };
-    document.getElementById('next').onclick = ()=>{ if(current<epochs.length-1) current++; render(); };
-    document.getElementById('addBtn').onclick = ()=>{
+    document.getElementById('addPrev').onclick = () => { let d=new Date(epochs[0]); d.setDate(d.getDate()-7); epochs.unshift(keyFmt(d)); current=0; render(); };
+    document.getElementById('delPrev').onclick = () => { if(epochs.length>1){ epochs.shift(); if(current>0) current--; render(); } };
+    document.getElementById('addNext').onclick = () => { let d=new Date(epochs[epochs.length-1]); d.setDate(d.getDate()+7); epochs.push(keyFmt(d)); current=epochs.length-1; render(); };
+    document.getElementById('delNext').onclick = () => { if(epochs.length>1){ epochs.pop(); if(current>=epochs.length) current=epochs.length-1; render(); } };
+    document.getElementById('prev').onclick    = () => { if(current>0) current--; render(); };
+    document.getElementById('next').onclick    = () => { if(current<epochs.length-1) current++; render(); };
+    document.getElementById('addBtn').onclick  = () => {
       const c = document.getElementById('crypto').value;
       const a = parseFloat(document.getElementById('amount').value);
       if(!c||isNaN(a)) return alert('Select a crypto & enter valid amount.');
-      const key=epochs[current], d=loadData();
-      if(!d[key]) d[key]={pharaoh:0,velodrome:0};
-      d[key][c]+=a; saveData(d); document.getElementById('amount').value=''; render();
+      let d = loadData(), k=epochs[current];
+      d[k] = d[k]||{pharaoh:0,velodrome:0};
+      d[k][c] += a; saveData(d); document.getElementById('amount').value=''; render();
     };
 
     render();
