@@ -1,78 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <title>Epoch Dividend Tracker</title>
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Tailwind & Fonts -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Plus+Jakarta+Sans:wght@200;400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Plus+Jakarta+Sans:wght@300;500&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #111217;
-      background-image:
-        repeating-linear-gradient(
-          45deg,
-          rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 1px,
-          transparent 1px, transparent 8px
-        );
+      background: linear-gradient(135deg, #0d0b13, #17151f);
       color: #e5e7eb;
       min-height: 100vh;
     }
     h1 {
       font-family: 'Inter', sans-serif;
       font-weight: 600;
+      font-size: 1.875rem; /* text-3xl */
       color: #fdfdfd;
       text-shadow: 0 0 4px rgba(0,0,0,0.7);
     }
     .glass {
-      background: rgba(255,255,255,0.07);
-      backdrop-filter: blur(20px);
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(24px);
       border: 1px solid rgba(255,255,255,0.12);
     }
     .btn-primary {
-      @apply px-4 py-2 rounded font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-500 shadow-xl;
+      @apply px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 shadow-xl;
     }
     .btn-primary:hover {
-      @apply from-indigo-600 to-purple-600;
+      @apply from-indigo-700 to-purple-700;
     }
     .btn-circle {
       @apply w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white;
     }
     select, input {
-      @apply bg-white/15 border border-white/30 text-white placeholder-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500;
+      @apply bg-white/20 border border-white/30 text-white placeholder-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500;
     }
-    /* Logo styles */
-    .logo { height: 32px; filter: drop-shadow(0 0 4px rgba(0,0,0,0.7)); }
+    /* Logo */
+    .logo { height: 40px; filter: drop-shadow(0 0 6px rgba(0,0,0,0.8)); }
   </style>
 </head>
 <body>
-  <div class="max-w-4xl mx-auto p-6 space-y-6">
+  <div class="max-w-4xl mx-auto p-6 space-y-4">
 
-    <!-- HEADER with logos -->
-    <div class="flex flex-col items-center space-y-2">
-      <div class="flex space-x-6">
-        <img src="https://cryptologos.cc/logos/pharaoh-finance-logo.svg?v=014" alt="Pharaoh" class="logo"/>
-        <img src="https://cryptologos.cc/logos/velodrome-finance-velo-logo.svg?v=014" alt="Velodrome" class="logo"/>
-      </div>
-      <h1 class="text-3xl">Epoch Dividend Tracker</h1>
+    <!-- HEADER with Logos -->
+    <div class="flex justify-center space-x-8 mb-4">
+      <img class="logo" src="https://cryptologos.cc/logos/pharaoh-finance-logo.svg?v=014" alt="Pharaoh Logo"/>
+      <img class="logo" src="https://cryptologos.cc/logos/velodrome-finance-velo-logo.svg?v=014" alt="Velodrome Logo"/>
     </div>
+    <h1 class="text-center">Epoch Dividend Tracker</h1>
 
-    <!-- CHART -->
+    <!-- CHART CARD -->
     <div class="glass rounded-2xl p-6 shadow-2xl">
       <canvas id="divChart"></canvas>
     </div>
 
     <!-- ENTRY FORM -->
     <div class="glass rounded-2xl p-6 shadow-2xl space-y-4">
+      <!-- Extend Epochs -->
+      <div class="flex justify-end space-x-2">
+        <button id="addPrevEpoch" class="btn-circle" title="Add previous epoch">←</button>
+        <button id="addNextEpoch" class="btn-circle" title="Add next epoch">→</button>
+      </div>
+      <!-- Navigator -->
       <div class="flex justify-center items-center space-x-4">
         <button id="prevEpoch" class="btn-circle">&lt;</button>
         <div class="text-lg font-medium" id="epochNumber">Epoch #1</div>
         <button id="nextEpoch" class="btn-circle">&gt;</button>
       </div>
       <div class="text-center text-gray-300" id="epochRange">Loading…</div>
+      <!-- Inputs -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
         <div>
           <label class="block mb-1 text-gray-300">Crypto</label>
@@ -90,7 +90,7 @@
       </div>
     </div>
 
-    <!-- TABLE -->
+    <!-- TABLE CARD -->
     <div class="glass rounded-2xl p-4 shadow-2xl overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
@@ -108,132 +108,133 @@
 
   <script>
   // ─── Data Helpers ─────────────────────────────────────────────────────────────
-  const LS = 'dividends_v7';
-  const load = () => JSON.parse(localStorage.getItem(LS) || '{}');
+  const LS = 'dividends_v8';
+  const load = () => JSON.parse(localStorage.getItem(LS)||'{}');
   const save = obj => localStorage.setItem(LS, JSON.stringify(obj));
 
   // compute epoch start (Thu→Wed)
   function epochStart(d) {
-    const day = d.getDay(), diff = day >=4 ? day-4 : day+3;
-    const s = new Date(d); s.setDate(d.getDate() - diff);
-    return new Date(s.getFullYear(), s.getMonth(), s.getDate());
+    const day=d.getDay(), diff=day>=4?day-4:day+3;
+    const s=new Date(d); s.setDate(d.getDate()-diff);
+    return new Date(s.getFullYear(),s.getMonth(),s.getDate());
   }
-  const keyFmt = d => d.toISOString().slice(0,10);
+  const keyFmt = d=>d.toISOString().slice(0,10);
 
-  // human label: "Jun 19–Jun 25, 2025"
+  // human label
   function labelFmt(start) {
     const end = new Date(start); end.setDate(start.getDate()+6);
-    const opts = { month:'short', day:'numeric' };
+    const opts={month:'short',day:'numeric'};
     return `${start.toLocaleDateString(undefined,opts)}–${end.toLocaleDateString(undefined,opts)}, ${end.getFullYear()}`;
   }
 
-  // build sorted list of all keys we have data for + current if none
-  function buildKeys() {
-    const data = load();
-    const keys = Object.keys(data);
-    const curr = keyFmt(epochStart(new Date()));
-    if (!keys.includes(curr)) keys.push(curr);
+  // maintain a dynamic list of epoch keys
+  let epochKeys = (() => {
+    // start with any existing data + current epoch
+    const data=load(), keys=Object.keys(data);
+    const curr=keyFmt(epochStart(new Date()));
+    if(!keys.includes(curr)) keys.push(curr);
     return keys.sort();
+  })();
+
+  // add previous or next epoch
+  function addEpoch(direction) {
+    const sorted = epochKeys.slice().sort();
+    const first = new Date(sorted[0]);
+    const last  = new Date(sorted[sorted.length-1]);
+    const base = direction==='prev' ? first : last;
+    const d    = new Date(base);
+    d.setDate(base.getDate() + (direction==='prev' ? -7 : 7));
+    const k = keyFmt(d);
+    if (!epochKeys.includes(k)) {
+      epochKeys.push(k);
+      epochKeys.sort();
+    }
+    // if we added prev, set current to that new index; if next, go to new index
+    current = epochKeys.indexOf(k);
+    renderAll();
   }
 
   // prepare array with idx, values, label
   function prepare() {
-    const keys = buildKeys();
-    return keys.map((k,i)=> {
-      const v = load()[k]||{pharaoh:0,velodrome:0};
+    const data = load();
+    const sorted = epochKeys.sort();
+    return sorted.map((k,i)=> {
+      const v = data[k]||{pharaoh:0,velodrome:0};
       return {
         key: k,
         idx: i+1,
         label: labelFmt(new Date(k)),
         pharaoh: v.pharaoh,
         velodrome: v.velodrome,
-        total: v.pharaoh + v.velodrome
+        total: v.pharaoh+v.velodrome
       };
     });
   }
 
   // ─── Chart.js Setup ───────────────────────────────────────────────────────────
-  const ctx = document.getElementById('divChart').getContext('2d');
-  const chart = new Chart(ctx, {
+  const ctx=document.getElementById('divChart').getContext('2d');
+  const chart=new Chart(ctx,{
     type:'line',
     data:{ labels:[], datasets:[
       { label:'Total',      data:[], borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,0.2)', fill:true, tension:0.4, pointRadius:4 },
       { label:'Pharaoh',    data:[], borderColor:'#ec4899', backgroundColor:'rgba(236,72,153,0.2)', fill:false, tension:0.4, pointRadius:3 },
-      { label:'Velodrome',  data:[], borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.2)', fill:false, tension:0.4, pointRadius:3 },
+      { label:'Velodrome',  data:[], borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,0.2)', fill:false, tension:0.4, pointRadius:3 }
     ]},
     options:{
       responsive:true,
       scales:{
-        x:{
-          title:{ display:true, text:'Epoch #' },
-          ticks:{
-            color:'#cbd5e1',
-            callback: v => `#${v}`
-          },
-          grid:{ color:'rgba(203,213,225,0.1)' }
-        },
-        y:{
-          ticks:{ color:'#cbd5e1' },
-          grid:{ color:'rgba(203,213,225,0.1)' },
-          beginAtZero:true
-        }
+        x:{ title:{display:true,text:'Epoch #'}, ticks:{color:'#cbd5e1',callback:v=>`#${v}`}, grid:{color:'rgba(203,213,225,0.1)'} },
+        y:{ ticks:{color:'#cbd5e1'}, grid:{color:'rgba(203,213,225,0.1)'}, beginAtZero:true }
       },
-      plugins:{ legend:{ labels:{ color:'#f8fafc' } } }
+      plugins:{ tooltip:{ callbacks:{ title:ctx=>prepare()[ctx[0].dataIndex].label } }, legend:{ labels:{color:'#f8fafc'} } }
     }
   });
 
   // ─── Render & State ───────────────────────────────────────────────────────────
-  let current = buildKeys().indexOf(keyFmt(epochStart(new Date())));
+  let current = epochKeys.indexOf(keyFmt(epochStart(new Date())));
 
   function renderAll() {
     const arr = prepare();
-
     // Chart
     chart.data.labels = arr.map(d=>d.idx);
     chart.data.datasets[0].data = arr.map(d=>d.total.toFixed(2));
     chart.data.datasets[1].data = arr.map(d=>d.pharaoh.toFixed(2));
     chart.data.datasets[2].data = arr.map(d=>d.velodrome.toFixed(2));
     chart.update();
-
-    // Epoch UI
+    // Navigator
     document.getElementById('epochNumber').textContent = `Epoch #${arr[current].idx}`;
     document.getElementById('epochRange').textContent  = arr[current].label;
     document.getElementById('prevEpoch').disabled = current===0;
     document.getElementById('nextEpoch').disabled = current===arr.length-1;
-
     // Table
-    document.getElementById('divTable').innerHTML =
-      arr.map(d=>`
-        <tr>
-          <td class="p-2">#${d.idx}</td>
-          <td class="p-2 text-right text-pink-400">${d.pharaoh.toFixed(2)}</td>
-          <td class="p-2 text-right text-blue-400">${d.velodrome.toFixed(2)}</td>
-          <td class="p-2 text-right font-semibold">${d.total.toFixed(2)}</td>
-        </tr>
-      `).join('');
+    document.getElementById('divTable').innerHTML = arr.map(d=>`
+      <tr>
+        <td class="p-2">#${d.idx}</td>
+        <td class="p-2 text-right text-pink-400">${d.pharaoh.toFixed(2)}</td>
+        <td class="p-2 text-right text-blue-400">${d.velodrome.toFixed(2)}</td>
+        <td class="p-2 text-right font-semibold">${d.total.toFixed(2)}</td>
+      </tr>
+    `).join('');
   }
 
   // ─── Events ───────────────────────────────────────────────────────────────────
-  document.getElementById('prevEpoch').onclick = () => {
-    if (current>0) current--, renderAll();
-  };
-  document.getElementById('nextEpoch').onclick = () => {
-    if (current < buildKeys().length-1) current++, renderAll();
-  };
-  document.getElementById('addBtn').onclick = () => {
+  document.getElementById('addPrevEpoch').onclick = () => addEpoch('prev');
+  document.getElementById('addNextEpoch').onclick = () => addEpoch('next');
+  document.getElementById('prevEpoch').onclick     = () => { if(current>0) current--; renderAll(); };
+  document.getElementById('nextEpoch').onclick     = () => { if(current<epochKeys.length-1) current++; renderAll(); };
+  document.getElementById('addBtn').onclick        = () => {
     const crypto = document.getElementById('cryptoSelect').value;
     const amt    = parseFloat(document.getElementById('divAmount').value);
-    if (!crypto || isNaN(amt)) return alert('Select crypto & enter a valid amount.');
-    const key = buildKeys()[current];
-    const data = load();
-    data[key] ??= { pharaoh:0, velodrome:0 };
-    data[key][crypto] += amt;
+    if(!crypto||isNaN(amt)) return alert('Select crypto & enter a valid amount.');
+    const key = epochKeys[current];
+    const data=load(); data[key]??={pharaoh:0,velodrome:0};
+    data[key][crypto]+=amt;
     save(data);
-    document.getElementById('divAmount').value = '';
+    document.getElementById('divAmount').value='';
     renderAll();
   };
 
-  // ─── Init ─────────────────────────────────────────────────────────────────────
+  // ─── Initialize ───────────────────────────────────────────────────────────────
   renderAll();
   </script>
 </body>
