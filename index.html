@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <title>Crypto Dividend Tracker - Minimalist Edition</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-custom-drop-shadow@1.0.3/dist/chartjs-plugin-custom-drop-shadow.min.js" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -61,14 +62,8 @@
     #controls { animation-delay: 0.2s; }
     .panel:last-child { animation-delay: 0.3s; }
     #chartContainer { height: 320px; }
-    canvas#chart {
-        width:100% !important; height:100% !important;
-        animation: barGlow 1.5s infinite alternate ease-in-out;
-    }
-    @keyframes barGlow {
-        from { filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.2)); }
-        to   { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4)); }
-    }
+    /* REMOVED previous cheap glow animation */
+    canvas { width:100% !important; height:100% !important; }
     .row { display:flex; align-items:center; justify-content:center; gap: 0.75rem; }
     .row.space { justify-content: flex-end; }
     .grid { display:flex; flex-wrap:wrap; gap:.75rem; }
@@ -200,14 +195,23 @@
             data: [],
             backgroundColor: 'rgba(239, 68, 68, 0.8)', // Red
             borderColor: 'var(--pharaoh-color)',
-            borderWidth: 1
+            borderWidth: 1,
+            // ** NEW: Per-dataset shadow configuration **
+            shadowColor: 'rgba(239, 68, 68, 0.5)',
+            shadowBlur: 15,
+            shadowOffsetX: 0,
+            shadowOffsetY: 0,
           },
           {
             label: 'Velodrome',
             data: [],
             backgroundColor: 'rgba(56, 122, 223, 0.8)', // Blue
             borderColor: 'var(--velodrome-color)',
-            borderWidth: 1
+            borderWidth: 1,
+            shadowColor: 'rgba(56, 122, 223, 0.5)',
+            shadowBlur: 15,
+            shadowOffsetX: 0,
+            shadowOffsetY: 0,
           }
         ]
       },
@@ -241,7 +245,7 @@
             },
           },
           legend: {
-            display: true, // Re-enabled the legend
+            display: true,
             labels: { color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" } }
           }
         }
@@ -266,7 +270,6 @@
       const arr = prepare();
       if (!arr.length) return;
 
-      // Simplified data assignment with fixed stacking order
       chart.data.labels = arr.map(x => `Epoch ${x.idx}`);
       chart.data.datasets[0].data = arr.map(x => x.pharaoh);
       chart.data.datasets[1].data = arr.map(x => x.velodrome);
@@ -281,7 +284,6 @@
       const formatCurrency = (num) => `$${num.toFixed(2)}`;
       document.getElementById('tableBody').innerHTML = arr.map(x => `
         <tr>
-          <td>${x.idx}</td>
           <td style="color:var(--pharaoh-color);">${formatCurrency(x.pharaoh)}</td>
           <td style="color:var(--velodrome-color);">${formatCurrency(x.velodrome)}</td>
           <td style="font-weight:600; color: var(--text-primary);">${formatCurrency(x.total)}</td>
