@@ -11,25 +11,20 @@
     :root {
       --background: #111113;
       --surface: #1C1C1E;
-      --pharaoh-color: #FFD700;
-      --velodrome-color: #EF4444;
+      --pharaoh-color: #EF4444; /* Red */
+      --velodrome-color: #387ADF; /* Blue */
       --text-primary: #F1F1F1;
       --text-secondary: #8E8E93;
       --border: #3A3A3C;
     }
     html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
+      height: 100%; margin: 0; padding: 0; overflow: hidden;
       background-color: var(--background);
       font-family: 'Inter', sans-serif;
       color: var(--text-primary);
     }
     body::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0;
+        content: ''; position: absolute; top: 0; left: 0;
         width: 100%; height: 100%;
         background-image:
             linear-gradient(to right, rgba(60, 60, 60, 0.2) 1px, transparent 1px),
@@ -38,112 +33,84 @@
         animation: bg-pan 60s linear infinite;
         opacity: 0.5;
     }
-    @keyframes bg-pan {
-        from { background-position: 0 0; }
-        to { background-position: -3rem 0; }
-    }
+    @keyframes bg-pan { from { background-position: 0 0; } to { background-position: -3rem 0; } }
     .container {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      padding: 1.5rem;
-      box-sizing: border-box;
-      overflow-y: auto;
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+      display: flex; flex-direction: column; height: 100%;
+      padding: 1.5rem; box-sizing: border-box; overflow-y: auto;
+      -ms-overflow-style: none; scrollbar-width: none;
     }
     .container::-webkit-scrollbar { display: none; }
     h1 {
-      font-size: 2.25rem;
-      font-weight: 700;
-      text-align: center;
-      margin-bottom: .25rem;
-      letter-spacing: -1px;
+      font-size: 2.25rem; font-weight: 700; text-align: center;
+      margin-bottom: .25rem; letter-spacing: -1px;
     }
     p.subtitle {
-      text-align: center;
-      color: var(--text-secondary);
-      margin-bottom: 2rem;
-      font-weight: 400;
+      text-align: center; color: var(--text-secondary);
+      margin-bottom: 2rem; font-weight: 400;
     }
-    h2 { font-weight: 600; font-size: 1.25rem; margin-top:0; margin-bottom: 1rem; }
+    h2 { font-weight: 600; font-size: 1.25rem; margin: 0 0 1rem 0; }
     .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.5rem;
-      margin-bottom: 1.25rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.5rem; margin-bottom: 1.25rem;
       box-shadow: 0 8px 32px rgba(0,0,0,0.2);
       animation: panel-fade-in 0.6s ease-out forwards;
       opacity: 0;
     }
-    @keyframes panel-fade-in {
-      from { opacity: 0; transform: translateY(15px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes panel-fade-in { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     #chartPanel { animation-delay: 0.1s; }
     #controls { animation-delay: 0.2s; }
     .panel:last-child { animation-delay: 0.3s; }
     #chartContainer { height: 320px; }
-    canvas { width:100% !important; height:100% !important; }
+    canvas#chart {
+        width:100% !important; height:100% !important;
+        animation: barGlow 1.5s infinite alternate ease-in-out;
+    }
+    @keyframes barGlow {
+        from { filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.2)); }
+        to   { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4)); }
+    }
     .row { display:flex; align-items:center; justify-content:center; gap: 0.75rem; }
     .row.space { justify-content: flex-end; }
     .grid { display:flex; flex-wrap:wrap; gap:.75rem; }
     .grid > * { flex:1; min-width:120px; }
     .btn {
-      background-color: var(--text-primary);
-      color: var(--background);
-      font-weight: 600;
-      border: none; border-radius:10px;
-      padding:.75rem 1.5rem; font-size:1rem;
-      cursor:pointer;
+      background-color: var(--text-primary); color: var(--background);
+      font-weight: 600; border: none; border-radius:10px;
+      padding:.75rem 1.5rem; font-size:1rem; cursor:pointer;
       transition: background-color .2s ease, transform .2s ease;
     }
     .btn:hover { background-color: #CCCCCC; }
     .btn:active { transform: scale(.97); }
     .circle-btn {
-      width:44px; height:44px;
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text-secondary);
-      border:1px solid var(--border);
+      width:44px; height:44px; background: rgba(255, 255, 255, 0.05);
+      color: var(--text-secondary); border:1px solid var(--border);
       border-radius:50%; font-size:1.2rem; cursor:pointer;
-      display:grid; place-items:center;
-      transition: all .2s ease;
+      display:grid; place-items:center; transition: all .2s ease;
     }
     .circle-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.1); color: var(--text-primary);
       border-color: var(--text-primary);
     }
     .circle-btn:active { transform: scale(.95); }
     .circle-btn:disabled { opacity: 0.4; cursor: not-allowed; background: transparent; border-color: var(--border); }
     select, input[type=number] {
-      width:100%; padding:.75rem;
-      background: var(--background);
-      border:1px solid var(--border);
-      border-radius:10px; color:var(--text-primary); font-size:1rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      width:100%; padding:.75rem; background: var(--background);
+      border:1px solid var(--border); border-radius:10px; color:var(--text-primary);
+      font-size:1rem; transition: border-color 0.2s, box-shadow 0.2s;
     }
     select:focus, input:focus {
-        outline: none;
-        border-color: var(--text-primary);
+        outline: none; border-color: var(--text-primary);
         box-shadow: 0 0 0 3px rgba(241, 241, 241, 0.3);
     }
     select {
       appearance:none;
       background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%238E8E93' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
-      background-repeat:no-repeat;
-      background-position:right 1rem center;
+      background-repeat:no-repeat; background-position:right 1rem center;
     }
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
-    table {
-      width:100%; border-collapse:collapse; margin-top:.75rem;
-    }
-    th, td {
-      padding:.8rem 1rem; border-bottom:1px solid var(--border);
-      text-align: right;
-    }
+    table { width:100%; border-collapse:collapse; margin-top:.75rem; }
+    th, td { padding:.8rem 1rem; border-bottom:1px solid var(--border); text-align: right; }
     th { text-align:left; color:var(--text-secondary); font-weight: 500; font-size: 0.9rem;}
     td:first-child, th:first-child { text-align:left; }
     tbody tr { transition: background-color 0.2s ease; }
@@ -221,7 +188,7 @@
     } else if (current === -1) {
         current = 0;
     }
-    
+
     const ctx = document.getElementById('chart').getContext('2d');
     const chart = new Chart(ctx, {
       type: 'bar',
@@ -229,13 +196,17 @@
         labels: [],
         datasets: [
           {
-            label: 'Bottom', // Generic label, will be overridden by tooltip
+            label: 'Pharaoh',
             data: [],
+            backgroundColor: 'rgba(239, 68, 68, 0.8)', // Red
+            borderColor: 'var(--pharaoh-color)',
             borderWidth: 1
           },
           {
-            label: 'Top', // Generic label
+            label: 'Velodrome',
             data: [],
+            backgroundColor: 'rgba(56, 122, 223, 0.8)', // Blue
+            borderColor: 'var(--velodrome-color)',
             borderWidth: 1
           }
         ]
@@ -266,14 +237,13 @@
             bodyFont: { family: "'Inter', sans-serif" }, titleColor: '#FFFFFF', bodyColor: '#CCCCCC',
             padding: 12, cornerRadius: 8,
             callbacks: {
-              title: ctx => prepare()[ctx[0].dataIndex].label,
-              label: function(context) {
-                return context.dataset.label + ': ' + new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.raw);
-              }
+              title: ctx => prepare()[ctx[0].dataIndex].label
             },
           },
-          // We hide the default legend because it's not useful with our dynamic bars
-          legend: { display: false }
+          legend: {
+            display: true, // Re-enabled the legend
+            labels: { color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" } }
+          }
         }
       }
     });
@@ -296,66 +266,17 @@
       const arr = prepare();
       if (!arr.length) return;
 
-      // Define colors directly in JavaScript
-      const pharaohBg = 'rgba(255, 215, 0, 0.8)';
-      const pharaohBorder = '#FFD700';
-      const velodromeBg = 'rgba(239, 68, 68, 0.8)';
-      const velodromeBorder = '#EF4444';
-
-      const bottomData = [], topData = [];
-      const bottomBgColors = [], topBgColors = [];
-      const bottomBorderColors = [], topBorderColors = [];
-      const bottomLabels = [], topLabels = [];
-
-      arr.forEach(epoch => {
-        if (epoch.pharaoh > epoch.velodrome) {
-          // Velodrome is smaller, goes on bottom
-          bottomData.push(epoch.velodrome);
-          topData.push(epoch.pharaoh);
-          bottomBgColors.push(velodromeBg);
-          topBgColors.push(pharaohBg);
-          bottomBorderColors.push(velodromeBorder);
-          topBorderColors.push(pharaohBorder);
-          bottomLabels.push('Velodrome');
-          topLabels.push('Pharaoh');
-        } else {
-          // Pharaoh is smaller or equal, goes on bottom
-          bottomData.push(epoch.pharaoh);
-          topData.push(epoch.velodrome);
-          bottomBgColors.push(pharaohBg);
-          topBgColors.push(velodromeBg);
-          bottomBorderColors.push(pharaohBorder);
-          topBorderColors.push(velodromeBorder);
-          bottomLabels.push('Pharaoh');
-          topLabels.push('Velodrome');
-        }
-      });
-
+      // Simplified data assignment with fixed stacking order
       chart.data.labels = arr.map(x => `Epoch ${x.idx}`);
-      
-      // Update bottom dataset
-      chart.data.datasets[0].data = bottomData;
-      chart.data.datasets[0].backgroundColor = bottomBgColors;
-      chart.data.datasets[0].borderColor = bottomBorderColors;
-      
-      // Update top dataset
-      chart.data.datasets[1].data = topData;
-      chart.data.datasets[1].backgroundColor = topBgColors;
-      chart.data.datasets[1].borderColor = topBorderColors;
-
-      // Update tooltip labels dynamically
-      chart.config.options.plugins.tooltip.callbacks.label = function(context) {
-          const labels = context.datasetIndex === 0 ? bottomLabels : topLabels;
-          return labels[context.dataIndex] + ': ' + new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.raw);
-      };
-      
+      chart.data.datasets[0].data = arr.map(x => x.pharaoh);
+      chart.data.datasets[1].data = arr.map(x => x.velodrome);
       chart.update();
 
       if (current >= arr.length) current = arr.length - 1;
       document.getElementById('epochNum').textContent   = `Epoch #${arr[current].idx}`;
       document.getElementById('epochRange').textContent = arr[current].label;
       document.getElementById('prev').disabled = (current === 0);
-      document.getElementById('next').disabled = (current === arr.length-1);
+      document.getElementById('next').disabled = (current === arr.length - 1);
 
       const formatCurrency = (num) => `$${num.toFixed(2)}`;
       document.getElementById('tableBody').innerHTML = arr.map(x => `
