@@ -4,7 +4,6 @@
   <meta charset="UTF-8"/>
   <title>Crypto Dividend Tracker - macOS Pro</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -159,10 +158,10 @@ window.onload = function() {
         const pCtx = particleCanvas.getContext('2d');
         let particles = [];
         
-        function resizeParticleCanvas() {
+        const resizeParticleCanvas = () => {
             particleCanvas.width = window.innerWidth;
             particleCanvas.height = window.innerHeight;
-        }
+        };
         resizeParticleCanvas();
         window.addEventListener('resize', resizeParticleCanvas);
         
@@ -188,14 +187,14 @@ window.onload = function() {
                 pCtx.fill();
             }
         }
-        function initParticles() {
+        const initParticles = () => {
             for (let i = 0; i < 80; i++) particles.push(new Particle());
-        }
-        function animateParticles() {
+        };
+        const animateParticles = () => {
             pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
             particles.forEach(p => { p.update(); p.draw(); });
             requestAnimationFrame(animateParticles);
-        }
+        };
         initParticles();
         animateParticles();
     }
@@ -290,8 +289,8 @@ window.onload = function() {
       chart.data.datasets[1].data = arr.map(x => x.velodrome);
       chart.update();
       if (current >= arr.length) current = arr.length - 1;
-      document.getElementById('epochNum').textContent = `Epoch #${arr[current].idx}`;
-      document.getElementById('epochRange').textContent = arr[current].label;
+      document.getElementById('epochNum').textContent = `Epoch #${arr.length > 0 ? arr[current].idx : 1}`;
+      document.getElementById('epochRange').textContent = arr.length > 0 ? arr[current].label : 'No Data';
       document.getElementById('prev').disabled = (current === 0);
       document.getElementById('next').disabled = (current === arr.length - 1);
       const formatCurrency = (num) => `$${num.toFixed(2)}`;
@@ -300,8 +299,8 @@ window.onload = function() {
       `).reverse().join('');
       setupDockEffect();
     }
-
-    // Assign event listeners
+    
+    // Original event listeners
     document.getElementById('addPrev').onclick = () => { let d=new Date(epochs[0]); d.setDate(d.getDate()-7); epochs.unshift(keyFmt(d)); current=0; render(); };
     document.getElementById('delPrev').onclick = () => { if(epochs.length>1){ epochs.shift(); if(current>0) current--; render(); } };
     document.getElementById('addNext').onclick = () => { let d=new Date(epochs[epochs.length-1]); d.setDate(d.getDate()+7); epochs.push(keyFmt(d)); current=epochs.length-1; render(); };
