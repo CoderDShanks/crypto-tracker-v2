@@ -4,7 +4,6 @@
   <meta charset="UTF-8"/>
   <title>Crypto Dividend Tracker - macOS Pro</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -108,8 +107,8 @@
     th:not(:first-child), td:not(:first-child) { text-align: right; }
     th { color:var(--text-secondary); font-weight: 500; font-size: 0.9rem;}
     tbody tr { transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.2s ease; }
-    tbody tr.hovered { transform: scale(1.05) translateX(10px); background: var(--panel-bg); border-radius: 8px; }
-    tbody tr.prev-hovered, tbody tr.next-hovered { transform: scale(1.02) translateX(5px); }
+    tbody tr.hovered { transform: scale(1.05) translateX(10px); background: var(--panel-bg); border-radius: 8px; position: relative; z-index: 2;}
+    tbody tr.prev-hovered, tbody tr.next-hovered { transform: scale(1.02) translateX(5px); position: relative; z-index: 1;}
   </style>
 </head>
 <body>
@@ -154,83 +153,52 @@ window.onload = function() {
     const loadData = () => JSON.parse(localStorage.getItem(STORAGE) || '{}');
     const saveData = d => localStorage.setItem(STORAGE, JSON.stringify(d));
 
-    // --- Sound Engine ---
-    const sounds = {
-        hover: new Howl({ src: ['https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-designe-elements/designe_elements_ui_digital_beep_soft_click_single_001.mp3'], volume: 0.3 }),
-        swoosh: new Howl({ src: ['https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-designe-elements/designe_elements_ui_digital_whoosh_soft_fast_001.mp3'], volume: 0.4 }),
-        confirm: new Howl({ src: ['https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-little-robot-sound-factory/little_robot_sound_factory_ui_Digital_Button_Ping_01.mp3'], volume: 0.5 }),
-    };
-
     // --- Interactive Particle Background ---
     const particleCanvas = document.getElementById('particle-canvas');
-    const pCtx = particleCanvas.getContext('2d');
-    let particles = [];
-    let mouse = { x: null, y: null, radius: 150 };
-
-    function resizeParticleCanvas() {
-        particleCanvas.width = window.innerWidth;
-        particleCanvas.height = window.innerHeight;
-    }
-    resizeParticleCanvas();
-    window.addEventListener('resize', resizeParticleCanvas);
-    window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
-    window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
-    
-    class Particle {
-        constructor() {
-            this.x = Math.random() * particleCanvas.width;
-            this.y = Math.random() * particleCanvas.height;
-            this.size = Math.random() * 1.5 + 1;
-            this.speedX = Math.random() * 0.4 - 0.2;
-            this.speedY = Math.random() * 0.4 - 0.2;
-            this.color = 'rgba(161, 161, 166, 0.8)';
+    if (particleCanvas) {
+        const pCtx = particleCanvas.getContext('2d');
+        let particles = [];
+        
+        function resizeParticleCanvas() {
+            particleCanvas.width = window.innerWidth;
+            particleCanvas.height = window.innerHeight;
         }
-        update() {
-            if (this.x > particleCanvas.width || this.x < 0) this.speedX = -this.speedX;
-            if (this.y > particleCanvas.height || this.y < 0) this.speedY = -this.speedY;
-            this.x += this.speedX;
-            this.y += this.speedY;
-        }
-        draw() {
-            pCtx.fillStyle = this.color;
-            pCtx.beginPath();
-            pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            pCtx.fill();
-        }
-    }
-
-    function initParticles() {
-        for (let i = 0; i < 80; i++) particles.push(new Particle());
-    }
-
-    function connectParticles() {
-        let opacityValue = 1;
-        for (let a = 0; a < particles.length; a++) {
-            for (let b = a; b < particles.length; b++) {
-                let distance = ((particles[a].x - particles[b].x) * (particles[a].x - particles[b].x)) +
-                               ((particles[a].y - particles[b].y) * (particles[a].y - particles[b].y));
-                if (distance < (particleCanvas.width/7) * (particleCanvas.height/7)) {
-                    opacityValue = 1 - (distance/20000);
-                    pCtx.strokeStyle = `rgba(161, 161, 166, ${opacityValue})`;
-                    pCtx.lineWidth = 1;
-                    pCtx.beginPath();
-                    pCtx.moveTo(particles[a].x, particles[a].y);
-                    pCtx.lineTo(particles[b].x, particles[b].y);
-                    pCtx.stroke();
-                }
+        resizeParticleCanvas();
+        window.addEventListener('resize', resizeParticleCanvas);
+        
+        class Particle {
+            constructor() { this.respawn(); this.y = Math.random() * particleCanvas.height; }
+            respawn() {
+                this.x = Math.random() * particleCanvas.width;
+                this.y = Math.random() * 50 - 50;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.speedX = Math.random() * 0.4 - 0.2;
+                this.speedY = Math.random() * 0.5 + 0.2;
+                this.color = `rgba(161, 161, 166, ${Math.random() * 0.5 + 0.3})`;
+            }
+            update() {
+                if (this.x > particleCanvas.width + 10 || this.x < -10 || this.y > particleCanvas.height + 10) this.respawn();
+                this.x += this.speedX;
+                this.y += this.speedY;
+            }
+            draw() {
+                pCtx.fillStyle = this.color;
+                pCtx.beginPath();
+                pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                pCtx.fill();
             }
         }
+        function initParticles() {
+            for (let i = 0; i < 80; i++) particles.push(new Particle());
+        }
+        function animateParticles() {
+            pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateParticles);
+        }
+        initParticles();
+        animateParticles();
     }
-    
-    function animateParticles() {
-        pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
-        particles.forEach(p => { p.update(); p.draw(); });
-        connectParticles();
-        requestAnimationFrame(animateParticles);
-    }
-    initParticles();
-    animateParticles();
-
 
     // --- Core App Logic ---
     let epochs = (() => {
@@ -267,14 +235,8 @@ window.onload = function() {
       data: {
         labels: [],
         datasets: [
-          {
-            label: 'Pharaoh', data: [], backgroundColor: pharaohGradient,
-            borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderRadius: 6,
-          },
-          {
-            label: 'Velodrome', data: [], backgroundColor: velodromeGradient,
-            borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderRadius: 6,
-          }
+          { label: 'Pharaoh', data: [], backgroundColor: pharaohGradient, borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderRadius: 6 },
+          { label: 'Velodrome', data: [], backgroundColor: velodromeGradient, borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderRadius: 6 }
         ]
       },
       options: {
@@ -299,27 +261,23 @@ window.onload = function() {
         const d = loadData();
         return epochs.map((k,i) => {
             const v = d[k] || { pharaoh:0, velodrome:0 };
-            return {
-                key: k, idx: i+1, label: labelFmt(new Date(k)),
-                pharaoh: v.pharaoh || 0, velodrome: v.velodrome || 0,
-                total: (v.pharaoh || 0) + (v.velodrome || 0)
-            };
+            return { key: k, idx: i+1, label: labelFmt(new Date(k)), pharaoh: v.pharaoh || 0, velodrome: v.velodrome || 0, total: (v.pharaoh || 0) + (v.velodrome || 0) };
         });
     }
 
-    let tableRows = [];
     function setupDockEffect() {
-        tableRows = Array.from(document.querySelectorAll('#tableBody tr'));
+        const tableBody = document.querySelector('#tableBody');
+        if (!tableBody) return;
+        let tableRows = Array.from(tableBody.querySelectorAll('tr'));
         tableRows.forEach((row, index) => {
             row.addEventListener('mouseenter', () => {
-                sounds.hover.play();
                 tableRows.forEach(r => r.classList.remove('hovered', 'prev-hovered', 'next-hovered'));
                 row.classList.add('hovered');
                 if (tableRows[index-1]) tableRows[index-1].classList.add('prev-hovered');
                 if (tableRows[index+1]) tableRows[index+1].classList.add('next-hovered');
             });
         });
-        document.querySelector('#tableBody').addEventListener('mouseleave', () => {
+        tableBody.addEventListener('mouseleave', () => {
              tableRows.forEach(r => r.classList.remove('hovered', 'prev-hovered', 'next-hovered'));
         });
     }
@@ -343,20 +301,14 @@ window.onload = function() {
       setupDockEffect();
     }
 
-    // Add sound to navigation
-    document.querySelectorAll('#prev, #next, #addPrev, #addNext, #delPrev, #delNext').forEach(btn => {
-        btn.addEventListener('click', () => sounds.swoosh.play());
-    });
-    document.getElementById('addBtn').addEventListener('click', () => sounds.confirm.play());
-    
-    // Original event listeners
+    // Assign event listeners
     document.getElementById('addPrev').onclick = () => { let d=new Date(epochs[0]); d.setDate(d.getDate()-7); epochs.unshift(keyFmt(d)); current=0; render(); };
     document.getElementById('delPrev').onclick = () => { if(epochs.length>1){ epochs.shift(); if(current>0) current--; render(); } };
     document.getElementById('addNext').onclick = () => { let d=new Date(epochs[epochs.length-1]); d.setDate(d.getDate()+7); epochs.push(keyFmt(d)); current=epochs.length-1; render(); };
     document.getElementById('delNext').onclick = () => { if(epochs.length>1){ epochs.pop(); if(current>=epochs.length) current=epochs.length-1; render(); } };
-    document.getElementById('prev').onclick    = () => { if(current>0) current--; render(); };
-    document.getElementById('next').onclick    = () => { if(current<epochs.length-1) current++; render(); };
-    document.getElementById('addBtn').onclick  = () => {
+    document.getElementById('prev').onclick = () => { if(current>0) current--; render(); };
+    document.getElementById('next').onclick = () => { if(current<epochs.length-1) current++; render(); };
+    document.getElementById('addBtn').onclick = () => {
       const c = document.getElementById('crypto').value;
       const a = parseFloat(document.getElementById('amount').value);
       if(!c||isNaN(a)) return alert('Please select a crypto and enter a valid amount.');
