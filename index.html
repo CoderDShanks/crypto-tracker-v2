@@ -4,7 +4,6 @@
   <meta charset="UTF-8"/>
   <title>Crypto Dividend Tracker - Minimalist Edition</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-custom-drop-shadow@1.0.3/dist/chartjs-plugin-custom-drop-shadow.min.js" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -62,8 +61,7 @@
     #controls { animation-delay: 0.2s; }
     .panel:last-child { animation-delay: 0.3s; }
     #chartContainer { height: 320px; }
-    /* REMOVED previous cheap glow animation */
-    canvas { width:100% !important; height:100% !important; }
+    canvas { width:100% !important; height:100% !important; cursor: crosshair; }
     .row { display:flex; align-items:center; justify-content:center; gap: 0.75rem; }
     .row.space { justify-content: flex-end; }
     .grid { display:flex; flex-wrap:wrap; gap:.75rem; }
@@ -105,9 +103,14 @@
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
     table { width:100%; border-collapse:collapse; margin-top:.75rem; }
-    th, td { padding:.8rem 1rem; border-bottom:1px solid var(--border); text-align: right; }
-    th { text-align:left; color:var(--text-secondary); font-weight: 500; font-size: 0.9rem;}
-    td:first-child, th:first-child { text-align:left; }
+    th, td { padding:.8rem 1rem; border-bottom:1px solid var(--border); }
+    th { color:var(--text-secondary); font-weight: 500; font-size: 0.9rem;}
+    /* ** FIXED: Align numeric headers to the right ** */
+    th:not(:first-child) { text-align: right; }
+    th:first-child { text-align: left; }
+    td:not(:first-child) { text-align: right; }
+    td:first-child { text-align: left; }
+
     tbody tr { transition: background-color 0.2s ease; }
     tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
   </style>
@@ -183,8 +186,77 @@
     } else if (current === -1) {
         current = 0;
     }
+    
+    // =================================================================
+    // ** NEW: Custom Plugin for Glass Reflection Effect **
+    // =================================================================
+    let hoveredElement = null;
+    let mousePosition = null;
 
+    const glassReflectionPlugin = {
+        id: 'glassReflection',
+        afterEvent: (chart, args, options) => {
+            const event = args.event;
+            if (event.type === 'mousemove') {
+                const elements = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
+                let needsRender = false;
+
+                if (elements.length > 0) {
+                    if (hoveredElement?._index !== elements[0]._index || hoveredElement?._datasetIndex !== elements[0]._datasetIndex) {
+                        hoveredElement = elements[0];
+                        needsRender = true;
+                    }
+                    mousePosition = { x: event.x, y: event.y };
+                } else if (hoveredElement) {
+                    hoveredElement = null;
+                    mousePosition = null;
+                    needsRender = true;
+                }
+                if (needsRender) {
+                    chart.draw(); // Redraw chart instead of full render for performance
+                }
+            } else if (event.type === 'mouseout' && hoveredElement) {
+                hoveredElement = null;
+                mousePosition = null;
+                chart.draw();
+            }
+        },
+        afterDraw: (chart, args, options) => {
+            if (hoveredElement && mousePosition) {
+                const ctx = chart.ctx;
+                const { x, y, base, width } = hoveredElement;
+                const height = base - y;
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(x - width / 2, y, width, height);
+                ctx.clip();
+
+                const gradient = ctx.createRadialGradient(
+                    mousePosition.x, mousePosition.y, 0,
+                    mousePosition.x, mousePosition.y, width * 0.7
+                );
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x - width / 2, y, width, height);
+                ctx.restore();
+            }
+        }
+    };
+    
     const ctx = document.getElementById('chart').getContext('2d');
+    
+    // Create Glass Gradients
+    const pharaohGradient = ctx.createLinearGradient(0, 0, 0, 320);
+    pharaohGradient.addColorStop(0, 'rgba(239, 68, 68, 1)');
+    pharaohGradient.addColorStop(1, 'rgba(239, 68, 68, 0.4)');
+
+    const velodromeGradient = ctx.createLinearGradient(0, 0, 0, 320);
+    velodromeGradient.addColorStop(0, 'rgba(56, 122, 223, 1)');
+    velodromeGradient.addColorStop(1, 'rgba(56, 122, 223, 0.4)');
+
     const chart = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -193,25 +265,18 @@
           {
             label: 'Pharaoh',
             data: [],
-            backgroundColor: 'rgba(239, 68, 68, 0.8)', // Red
-            borderColor: 'var(--pharaoh-color)',
-            borderWidth: 1,
-            // ** NEW: Per-dataset shadow configuration **
-            shadowColor: 'rgba(239, 68, 68, 0.5)',
-            shadowBlur: 15,
-            shadowOffsetX: 0,
-            shadowOffsetY: 0,
+            backgroundColor: pharaohGradient,
+            borderColor: 'rgba(255,255,255,0.25)',
+            borderWidth: 2,
+            borderRadius: 4,
           },
           {
             label: 'Velodrome',
             data: [],
-            backgroundColor: 'rgba(56, 122, 223, 0.8)', // Blue
-            borderColor: 'var(--velodrome-color)',
-            borderWidth: 1,
-            shadowColor: 'rgba(56, 122, 223, 0.5)',
-            shadowBlur: 15,
-            shadowOffsetX: 0,
-            shadowOffsetY: 0,
+            backgroundColor: velodromeGradient,
+            borderColor: 'rgba(255,255,255,0.25)',
+            borderWidth: 2,
+            borderRadius: 4,
           }
         ]
       },
@@ -249,7 +314,8 @@
             labels: { color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" } }
           }
         }
-      }
+      },
+      plugins: [glassReflectionPlugin] // Register the custom plugin
     });
 
     function prepare() {
@@ -284,6 +350,7 @@
       const formatCurrency = (num) => `$${num.toFixed(2)}`;
       document.getElementById('tableBody').innerHTML = arr.map(x => `
         <tr>
+          <td>${x.idx}</td>
           <td style="color:var(--pharaoh-color);">${formatCurrency(x.pharaoh)}</td>
           <td style="color:var(--velodrome-color);">${formatCurrency(x.velodrome)}</td>
           <td style="font-weight:600; color: var(--text-primary);">${formatCurrency(x.total)}</td>
