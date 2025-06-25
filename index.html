@@ -2,135 +2,142 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Crypto Dividend Tracker - Vista Edition</title>
+  <title>Crypto Dividend Tracker - Stable Edition</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --pharaoh-color: #D32F2F; /* Vista-style Red */
-      --velodrome-color: #1976D2; /* Vista-style Blue */
-      --text-primary: #fff;
-      --text-secondary: #ddd;
-      --border-color: rgba(255, 255, 255, 0.3);
-      --panel-bg: rgba(20, 30, 45, 0.5);
+      --background: #111113;
+      --surface: #1C1C1E;
+      --pharaoh-color: #EF4444; /* Red */
+      --velodrome-color: #387ADF; /* Blue */
+      --text-primary: #F1F1F1;
+      --text-secondary: #8E8E93;
+      --border: #3A3A3C;
     }
-    /* ─── Base & Aurora Background ─────────────────────────────────── */
     html, body {
       height: 100%; margin: 0; padding: 0; overflow: hidden;
-      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--background);
+      font-family: 'Inter', sans-serif;
       color: var(--text-primary);
-      background: #0a1128;
     }
-    #vista-background {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: linear-gradient(170deg, #001f3f, #0a1128, #3D9970);
-      background-size: 200% 200%;
-      animation: aurora-pan 40s ease infinite;
-      overflow: hidden;
+    body::before {
+        content: ''; position: absolute; top: 0; left: 0;
+        width: 100%; height: 100%;
+        background-image:
+            linear-gradient(to right, rgba(60, 60, 60, 0.2) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(60, 60, 60, 0.2) 1px, transparent 1px);
+        background-size: 3rem 3rem;
+        animation: bg-pan 60s linear infinite;
+        opacity: 0.5;
     }
-    #vista-background::before {
-        content: ''; position: absolute; top: -50%; left: -50%;
-        width: 200%; height: 200%;
-        background: radial-gradient(circle, rgba(135, 206, 235, 0.2) 0%, rgba(135, 206, 235, 0) 60%);
-        animation: aurora-glow 20s ease-in-out infinite alternate;
+    @keyframes bg-pan { from { background-position: 0 0; } to { background-position: -3rem 0; } }
+    .container {
+      display: flex; flex-direction: column; height: 100%;
+      padding: 1.5rem; box-sizing: border-box; overflow-y: auto;
+      -ms-overflow-style: none; scrollbar-width: none;
     }
-    @keyframes aurora-pan { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-    @keyframes aurora-glow { from { transform: rotate(0deg) scale(1); } to { transform: rotate(360deg) scale(1.5); } }
-
-    .container { display: flex; flex-direction: column; height: 100%; padding: 1.5rem; box-sizing: border-box; overflow-y: auto; }
-    
-    /* ─── Aero Glass Panels ────────────────────────────────────────── */
+    .container::-webkit-scrollbar { display: none; }
+    h1 {
+      font-size: 2.25rem; font-weight: 700; text-align: center;
+      margin-bottom: .25rem; letter-spacing: -1px;
+    }
+    p.subtitle {
+      text-align: center; color: var(--text-secondary);
+      margin-bottom: 2rem; font-weight: 400;
+    }
+    h2 { font-weight: 600; font-size: 1.25rem; margin: 0 0 1rem 0; }
     .panel {
-      position: relative;
-      background: var(--panel-bg);
-      backdrop-filter: blur(20px) saturate(120%);
-      border: 1px solid var(--border-color);
-      border-top-color: rgba(255, 255, 255, 0.5);
-      border-radius: 8px; padding: 1.5rem; margin-bottom: 1.25rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.2);
-      overflow: hidden;
-      animation: panel-fade-in 0.5s ease-out backwards;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.5rem; margin-bottom: 1.25rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      animation: panel-fade-in 0.6s ease-out backwards;
+      opacity: 0;
     }
-    /* Light sweep animation on load */
-    .panel::after {
-        content: ''; position: absolute; top: 0;
-        left: -150%; width: 100%; height: 100%;
-        background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
-        animation: light-sweep 3s ease-in-out 1s infinite;
-    }
-    @keyframes light-sweep { from { left: -150%; } to { left: 150%; } }
-    @keyframes panel-fade-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-    #chartPanel { animation-delay: 0.1s; } #controls { animation-delay: 0.2s; } .panel:last-child { animation-delay: 0.3s; }
-
-    /* ─── Typography & UI Elements ─────────────────────────────────── */
-    h1 { font-size: 2.25rem; font-weight: 600; text-align: left; margin-bottom: 2rem; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
-    h2 { font-weight: 500; font-size: 1.25rem; margin: 0 0 1rem 0; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
+    @keyframes panel-fade-in { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    #chartPanel { animation-delay: 0.1s; }
+    #controls { animation-delay: 0.2s; }
+    .panel:last-child { animation-delay: 0.3s; }
     #chartContainer { height: 320px; }
     canvas { width:100% !important; height:100% !important; }
-    
-    /* ─── Vista "Gel" Buttons ──────────────────────────────────────── */
+    .row { display:flex; align-items:center; justify-content:center; gap: 0.75rem; }
+    .row.space { justify-content: flex-end; }
+    .grid { display:flex; flex-wrap:wrap; gap:.75rem; }
+    .grid > * { flex:1; min-width:120px; }
     .btn {
-      background: linear-gradient(to bottom, rgba(120, 180, 255, 0.9), rgba(50, 100, 200, 0.9));
-      color: #fff; font-weight: 600; border: 1px solid rgba(255,255,255,0.7);
-      border-radius:15px; padding:.7rem 1.4rem; font-size: 0.9rem;
-      cursor:pointer; transition: all .15s ease-out;
-      box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 2px 5px rgba(0,0,0,0.4);
-      text-shadow: 0 -1px 1px rgba(0,0,0,0.5);
+      background-color: var(--text-primary); color: var(--background);
+      font-weight: 600; border: none; border-radius:10px;
+      padding:.75rem 1.5rem; font-size:1rem; cursor:pointer;
+      transition: background-color .2s ease, transform .2s ease;
     }
-    .btn:hover { filter: brightness(1.1); }
-    .btn:active { transform: scale(.96); background: linear-gradient(to top, rgba(120, 180, 255, 0.9), rgba(50, 100, 200, 0.9)); }
-    
+    .btn:hover { background-color: #CCCCCC; }
+    .btn:active { transform: scale(.97); }
     .circle-btn {
-      width:36px; height:36px; background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
-      border: 1px solid var(--border-color); border-radius:50%;
-      display:grid; place-items:center; cursor:pointer;
-      transition: all .15s ease-out; box-shadow: 0 1px 1px rgba(0,0,0,0.3);
+      width:44px; height:44px; background: rgba(255, 255, 255, 0.05);
+      color: var(--text-secondary); border:1px solid var(--border);
+      border-radius:50%; font-size:1.2rem; cursor:pointer;
+      display:grid; place-items:center; transition: all .2s ease;
     }
-    .circle-btn:hover { background: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1)); }
-    .circle-btn:active { transform: scale(.92); }
-    .circle-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    
-    /* ─── Controls Panel & Start Orb ──────────────────────────────── */
-    #controls { padding-left: 60px; }
-    #start-orb {
-        position: absolute; left: 10px; top: 50%;
-        transform: translateY(-50%);
-        width: 40px; height: 40px; border-radius: 50%;
-        background: radial-gradient(circle at 50% 35%, #87CEFA, #00529B);
-        border: 2px solid #fff;
-        box-shadow: 0 0 20px #87CEFA, 0 0 10px #fff inset;
-        animation: pulse-orb 2s infinite alternate;
+    .circle-btn:hover {
+      background: rgba(255, 255, 255, 0.1); color: var(--text-primary);
+      border-color: var(--text-primary);
     }
-    @keyframes pulse-orb { from { box-shadow: 0 0 15px #87CEFA, 0 0 8px #fff inset; } to { box-shadow: 0 0 30px #87CEFA, 0 0 12px #fff inset; } }
-    
-    /* ─── Other UI Elements ────────────────────────────────────────── */
+    .circle-btn:active { transform: scale(.95); }
+    .circle-btn:disabled { opacity: 0.4; cursor: not-allowed; background: transparent; border-color: var(--border); }
     select, input[type=number] {
-      width:100%; padding:.7rem; background: rgba(0,0,0, 0.3);
-      border:1px solid var(--border-color); border-radius:4px; color:var(--text-primary);
-      font-size:1rem; transition: all 0.2s;
+      width:100%; padding:.75rem; background: var(--background);
+      border:1px solid var(--border); border-radius:10px; color:var(--text-primary);
+      font-size:1rem; transition: border-color 0.2s, box-shadow 0.2s;
     }
-    select:focus, input:focus { outline: none; border-color: #87CEFA; box-shadow: 0 0 8px #87CEFA; }
+    select:focus, input:focus {
+        outline: none; border-color: var(--text-primary);
+        box-shadow: 0 0 0 3px rgba(241, 241, 241, 0.3);
+    }
+    select {
+      appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%238E8E93' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+      background-repeat:no-repeat; background-position:right 1rem center;
+    }
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
     table { width:100%; border-collapse:collapse; margin-top:.75rem; }
-    th, td { padding:.8rem 1rem; border-bottom:1px solid var(--border-color); }
+    th, td { padding:.8rem 1rem; border-bottom:1px solid var(--border); }
     th:not(:first-child), td:not(:first-child) { text-align: right; }
-    th { font-weight: 500; font-size: 0.9rem;}
+    th { color:var(--text-secondary); font-weight: 500; font-size: 0.9rem;}
     tbody tr { transition: background-color 0.2s ease; }
-    tbody tr:hover { background-color: rgba(135, 206, 235, 0.1); }
+    tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
   </style>
 </head>
 <body>
-  <div id="vista-background"></div>
   <div class="container">
-    <h1>Dividend Tracker</h1>
+    <h1>Crypto Dividend Tracker</h1>
+    <p class="subtitle">A minimal and elegant way to track your earnings.</p>
     <div id="chartPanel" class="panel">
-      <h2>Performance</h2><div id="chartContainer"><canvas id="chart"></canvas></div>
+      <h2>Dividend Performance</h2>
+      <div id="chartContainer"><canvas id="chart"></canvas></div>
     </div>
     <div id="controls" class="panel">
-        <div id="start-orb"></div>
-        <h2>Controls</h2>
+      <h2>Controls</h2>
+        <div class="row space">
+            <button id="delPrev" class="circle-btn" title="Delete Earliest Epoch">−</button>
+            <button id="addPrev" class="circle-btn" title="Add Earlier Epoch">＋</button>
+            <button id="addNext" class="circle-btn" title="Add Later Epoch">＋</button>
+            <button id="delNext" class="circle-btn" title="Delete Latest Epoch">−</button>
         </div>
+        <div class="row" style="margin:1rem 0;">
+            <button id="prev" class="circle-btn">&lt;</button>
+            <span id="epochNum" style="font-size:1.25rem; font-weight:600; flex-grow:1; text-align:center;">Epoch #1</span>
+            <button id="next" class="circle-btn">&gt;</button>
+        </div>
+        <div id="epochRange" style="text-align:center;color:var(--text-secondary);margin-bottom:1.5rem;">Loading…</div>
+        <div class="grid">
+            <select id="crypto"><option value="">Choose Crypto</option><option value="pharaoh">Pharaoh</option><option value="velodrome">Velodrome</option></select>
+            <input id="amount" type="number" placeholder="Amount (USD)"/>
+            <button id="addBtn" class="btn">Add / Update</button>
+        </div>
+    </div>
     <div class="panel">
         <h2>Summary</h2>
         <table><thead><tr><th>Epoch #</th><th>Pharaoh</th><th>Velodrome</th><th>Total</th></tr></thead><tbody id="tableBody"></tbody></table>
@@ -143,7 +150,6 @@ window.onload = function() {
     const loadData = () => JSON.parse(localStorage.getItem(STORAGE) || '{}');
     const saveData = d => localStorage.setItem(STORAGE, JSON.stringify(d));
 
-    // --- Core App Logic (Stable Version) ---
     function epochStart(d) {
       const day = d.getDay(), diff = day>=4 ? day-4 : day+3;
       const s = new Date(d); s.setDate(d.getDate()-diff);
@@ -165,40 +171,29 @@ window.onload = function() {
     let current = epochs.indexOf(keyFmt(epochStart(new Date())));
     if (current === -1 && epochs.length > 0) current = epochs.length - 1;
 
-    const chartCtx = document.getElementById('chart').getContext('2d');
-    
-    // Vista-style "Aqua/Gel" Gradients
-    const pharaohGradient = chartCtx.createLinearGradient(0, 0, 0, 320);
-    pharaohGradient.addColorStop(0, 'rgba(255, 130, 130, 1)');
-    pharaohGradient.addColorStop(0.5, 'rgba(211, 47, 47, 1)');
-    pharaohGradient.addColorStop(1, 'rgba(255, 130, 130, 1)');
-
-    const velodromeGradient = chartCtx.createLinearGradient(0, 0, 0, 320);
-    velodromeGradient.addColorStop(0, 'rgba(120, 180, 255, 1)');
-    velodromeGradient.addColorStop(0.5, 'rgba(25, 118, 210, 1)');
-    velodromeGradient.addColorStop(1, 'rgba(120, 180, 255, 1)');
-
-    const chart = new Chart(chartCtx, {
+    const ctx = document.getElementById('chart').getContext('2d');
+    const chart = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: [],
         datasets: [
-          { label: 'Pharaoh', data: [], backgroundColor: pharaohGradient, borderWidth: 0, barPercentage: 0.8 },
-          { label: 'Velodrome', data: [], backgroundColor: velodromeGradient, borderWidth: 0, barPercentage: 0.8 }
+          { label: 'Pharaoh', data: [], backgroundColor: 'rgba(239, 68, 68, 0.8)', borderColor: 'var(--pharaoh-color)', borderWidth: 1 },
+          { label: 'Velodrome', data: [], backgroundColor: 'rgba(56, 122, 223, 0.8)', borderColor: 'var(--velodrome-color)', borderWidth: 1 }
         ]
       },
       options: {
-        animation: { duration: 1000, easing: 'easeOutBounce' },
+        animation: { duration: 1000, easing: 'easeOutQuart' },
         responsive: true, maintainAspectRatio: false,
         scales: {
           x: { stacked: true, ticks: { color: 'var(--text-primary)' }, grid: { display: false } },
-          y: { stacked: true, ticks: { color: 'var(--text-primary)', callback: (v) => '$' + v }, grid: { color: 'rgba(255, 255, 255, 0.15)', borderDash: [5, 5] } }
+          y: { stacked: true, ticks: { color: 'var(--text-primary)', callback: (v) => '$' + v }, grid: { color: 'rgba(255, 255, 255, 0.05)' } }
         },
         plugins: {
           legend: { labels: { color: 'var(--text-primary)' } },
           tooltip: {
-            backgroundColor: 'rgba(0,0,0,0.7)', padding: 12, cornerRadius: 4,
+            backgroundColor: 'rgba(10,10,10,0.8)', padding: 12, cornerRadius: 8,
             titleFont: { weight: '600' },
+            callbacks: { title: ctx => prepare()[ctx[0].dataIndex].label },
           }
         }
       }
@@ -218,59 +213,38 @@ window.onload = function() {
       chart.data.datasets[0].data = arr.map(x => x.pharaoh);
       chart.data.datasets[1].data = arr.map(x => x.velodrome);
       chart.update();
-      if (current >= arr.length) current = arr.length > 0 ? arr.length - 1 : 0;
-      const controlsContainer = document.querySelector('#controls');
+      if (current >= arr.length && arr.length > 0) current = arr.length - 1;
       if (arr.length > 0) {
-        controlsContainer.innerHTML = `
-            <div id="start-orb"></div>
-            <h2>Controls</h2>
-            <div class="row space">
-                <button id="delPrev" class="circle-btn" title="Delete Earliest Epoch">－</button>
-                <button id="addPrev" class="circle-btn" title="Add Earlier Epoch">＋</button>
-                <button id="addNext" class="circle-btn" title="Add Later Epoch">＋</button>
-                <button id="delNext" class="circle-btn" title="Delete Latest Epoch">－</button>
-            </div>
-            <div class="row" style="margin:1rem 0;">
-                <button id="prev" class="circle-btn"><</button>
-                <span id="epochNum" style="font-size:1.25rem; font-weight:600; flex-grow:1; text-align:center;">Epoch #${arr[current].idx}</span>
-                <button id="next" class="circle-btn">></button>
-            </div>
-            <div id="epochRange" style="text-align:center;color:var(--text-secondary);margin-bottom:1.5rem;">${arr[current].label}</div>
-            <div class="grid">
-                <select id="crypto"><option value="">Choose Crypto</option><option value="pharaoh">Pharaoh</option><option value="velodrome">Velodrome</option></select>
-                <input id="amount" type="number" placeholder="Amount (USD)"/>
-                <button id="addBtn" class="btn">Add / Update</button>
-            </div>
-        `;
-        attachEventListeners();
-        document.getElementById('prev').disabled = (current === 0);
-        document.getElementById('next').disabled = (current === arr.length - 1);
+        document.getElementById('epochNum').textContent = `Epoch #${arr[current].idx}`;
+        document.getElementById('epochRange').textContent = arr[current].label;
+      } else {
+        document.getElementById('epochNum').textContent = 'No Data';
+        document.getElementById('epochRange').textContent = 'Add an epoch and data to begin';
       }
-      
+      document.getElementById('prev').disabled = (current === 0);
+      document.getElementById('next').disabled = (current === arr.length - 1);
       const formatCurrency = (num) => `$${num.toFixed(2)}`;
       document.getElementById('tableBody').innerHTML = arr.map(x => `
         <tr><td>${x.idx}</td><td style="color:var(--pharaoh-color);">${formatCurrency(x.pharaoh)}</td><td style="color:var(--velodrome-color);">${formatCurrency(x.velodrome)}</td><td style="font-weight:600;">${formatCurrency(x.total)}</td></tr>
       `).reverse().join('');
     }
-    
-    function attachEventListeners() {
-        document.getElementById('addPrev').onclick = () => { let d=new Date(epochs[0]); d.setDate(d.getDate()-7); epochs.unshift(keyFmt(d)); current=0; render(); };
-        document.getElementById('delPrev').onclick = () => { if(epochs.length>1){ epochs.shift(); if(current>0) current--; render(); } };
-        document.getElementById('addNext').onclick = () => { let d=new Date(epochs[epochs.length-1]); d.setDate(d.getDate()+7); epochs.push(keyFmt(d)); current=epochs.length-1; render(); };
-        document.getElementById('delNext').onclick = () => { if(epochs.length>1){ epochs.pop(); if(current>=epochs.length) current=epochs.length-1; render(); } };
-        document.getElementById('prev').onclick = () => { if(current>0) current--; render(); };
-        document.getElementById('next').onclick = () => { if(current<epochs.length-1) current++; render(); };
-        document.getElementById('addBtn').onclick = () => {
-          const c = document.getElementById('crypto').value;
-          const a = parseFloat(document.getElementById('amount').value);
-          if(!c||isNaN(a)) return alert('Please select a crypto and enter a valid amount.');
-          let d = loadData(), k=epochs[current];
-          d[k] = d[k]||{ pharaoh:0, velodrome:0 };
-          d[k][c] = a;
-          saveData(d); document.getElementById('amount').value=''; render();
-        };
-    }
 
+    document.getElementById('addPrev').onclick = () => { if (epochs.length > 0) { let d=new Date(epochs[0]); d.setDate(d.getDate()-7); epochs.unshift(keyFmt(d)); } else { epochs.unshift(keyFmt(epochStart(new Date()))); } current=0; render(); };
+    document.getElementById('delPrev').onclick = () => { if(epochs.length>1){ epochs.shift(); if(current>0) current--; render(); } };
+    document.getElementById('addNext').onclick = () => { let d=new Date(epochs[epochs.length-1]); d.setDate(d.getDate()+7); epochs.push(keyFmt(d)); current=epochs.length-1; render(); };
+    document.getElementById('delNext').onclick = () => { if(epochs.length>1){ epochs.pop(); if(current>=epochs.length) current=epochs.length-1; render(); } };
+    document.getElementById('prev').onclick = () => { if(current>0) current--; render(); };
+    document.getElementById('next').onclick = () => { if(current<epochs.length-1) current++; render(); };
+    document.getElementById('addBtn').onclick = () => {
+      if (epochs.length === 0) { alert("Please add an epoch first using the '＋' buttons."); return; }
+      const c = document.getElementById('crypto').value;
+      const a = parseFloat(document.getElementById('amount').value);
+      if(!c||isNaN(a)) return alert('Please select a crypto and enter a valid amount.');
+      let d = loadData(), k=epochs[current];
+      d[k] = d[k]||{ pharaoh:0, velodrome:0 };
+      d[k][c] = a;
+      saveData(d); document.getElementById('amount').value=''; render();
+    };
     render();
 };
 </script>
