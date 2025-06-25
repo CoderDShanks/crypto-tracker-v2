@@ -12,9 +12,7 @@
       --background: #111113;
       --surface: #1C1C1E;
       --pharaoh-color: #FFD700;
-      --pharaoh-bg: rgba(255, 215, 0, 0.8);
       --velodrome-color: #EF4444;
-      --velodrome-bg: rgba(239, 68, 68, 0.8);
       --text-primary: #F1F1F1;
       --text-secondary: #8E8E93;
       --border: #3A3A3C;
@@ -231,7 +229,7 @@
         labels: [],
         datasets: [
           {
-            label: 'Bottom', // Generic label
+            label: 'Bottom', // Generic label, will be overridden by tooltip
             data: [],
             borderWidth: 1
           },
@@ -270,12 +268,12 @@
             callbacks: {
               title: ctx => prepare()[ctx[0].dataIndex].label,
               label: function(context) {
-                // This will be set dynamically in render()
                 return context.dataset.label + ': ' + new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.raw);
               }
             },
           },
-          legend: { labels: { color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" } } }
+          // We hide the default legend because it's not useful with our dynamic bars
+          legend: { display: false }
         }
       }
     });
@@ -298,6 +296,12 @@
       const arr = prepare();
       if (!arr.length) return;
 
+      // Define colors directly in JavaScript
+      const pharaohBg = 'rgba(255, 215, 0, 0.8)';
+      const pharaohBorder = '#FFD700';
+      const velodromeBg = 'rgba(239, 68, 68, 0.8)';
+      const velodromeBorder = '#EF4444';
+
       const bottomData = [], topData = [];
       const bottomBgColors = [], topBgColors = [];
       const bottomBorderColors = [], topBorderColors = [];
@@ -308,41 +312,46 @@
           // Velodrome is smaller, goes on bottom
           bottomData.push(epoch.velodrome);
           topData.push(epoch.pharaoh);
-          bottomBgColors.push('var(--velodrome-bg)');
-          topBgColors.push('var(--pharaoh-bg)');
-          bottomBorderColors.push('var(--velodrome-color)');
-          topBorderColors.push('var(--pharaoh-color)');
+          bottomBgColors.push(velodromeBg);
+          topBgColors.push(pharaohBg);
+          bottomBorderColors.push(velodromeBorder);
+          topBorderColors.push(pharaohBorder);
           bottomLabels.push('Velodrome');
           topLabels.push('Pharaoh');
         } else {
           // Pharaoh is smaller or equal, goes on bottom
           bottomData.push(epoch.pharaoh);
           topData.push(epoch.velodrome);
-          bottomBgColors.push('var(--pharaoh-bg)');
-          topBgColors.push('var(--velodrome-bg)');
-          bottomBorderColors.push('var(--pharaoh-color)');
-          topBorderColors.push('var(--velodrome-color)');
+          bottomBgColors.push(pharaohBg);
+          topBgColors.push(velodromeBg);
+          bottomBorderColors.push(pharaohBorder);
+          topBorderColors.push(velodromeBorder);
           bottomLabels.push('Pharaoh');
           topLabels.push('Velodrome');
         }
       });
 
       chart.data.labels = arr.map(x => `Epoch ${x.idx}`);
+      
       // Update bottom dataset
       chart.data.datasets[0].data = bottomData;
       chart.data.datasets[0].backgroundColor = bottomBgColors;
       chart.data.datasets[0].borderColor = bottomBorderColors;
-      chart.config.options.plugins.tooltip.callbacks.label = function(context) {
-          const labels = context.datasetIndex === 0 ? bottomLabels : topLabels;
-          return labels[context.dataIndex] + ': ' + new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.raw);
-      };
+      
       // Update top dataset
       chart.data.datasets[1].data = topData;
       chart.data.datasets[1].backgroundColor = topBgColors;
       chart.data.datasets[1].borderColor = topBorderColors;
+
+      // Update tooltip labels dynamically
+      chart.config.options.plugins.tooltip.callbacks.label = function(context) {
+          const labels = context.datasetIndex === 0 ? bottomLabels : topLabels;
+          return labels[context.dataIndex] + ': ' + new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.raw);
+      };
       
       chart.update();
 
+      if (current >= arr.length) current = arr.length - 1;
       document.getElementById('epochNum').textContent   = `Epoch #${arr[current].idx}`;
       document.getElementById('epochRange').textContent = arr[current].label;
       document.getElementById('prev').disabled = (current === 0);
