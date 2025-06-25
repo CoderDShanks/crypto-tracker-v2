@@ -2,204 +2,372 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Holo-Chain Dividend Tracker</title>
+  <title>Crypto Dividend Tracker - macOS Pro</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
-  <script src="https://unpkg.com/twigl@0.3.0/dist/twigl.min.js"></script>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --background: #03070C;
-      --surface: rgba(10, 25, 47, 0.5);
-      --border-color: rgba(56, 182, 255, 0.2);
-      --glow-color: rgba(56, 182, 255, 0.7);
-      --pharaoh-color: #F472B6; /* Magenta */
-      --velodrome-color: #FBBF24; /* Amber */
-      --text-primary: #E6EDF3;
-      --text-secondary: #7D8590;
+      --panel-bg: rgba(40, 40, 40, 0.5);
+      --border-color: rgba(255, 255, 255, 0.15);
+      --pharaoh-color: #F87171;
+      --velodrome-color: #60A5FA;
+      --text-primary: #f5f5f7;
+      --text-secondary: #a1a1a6;
+      --accent-blue: #0A84FF;
     }
     html, body {
       height: 100%; margin: 0; padding: 0; overflow: hidden;
-      background-color: var(--background);
-      font-family: 'Roboto Mono', monospace;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       color: var(--text-primary);
-      cursor: crosshair;
+      background-color: #000;
     }
-    #webgl-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
-    #threejs-overlay { position: absolute; top: 0; left: 0; pointer-events: none; }
-    
+    #interactive-background {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        z-index: -1; background-color: #0D1117;
+        background-image: url('http://googleusercontent.com/image_generation_content/1');
+        background-size: cover; background-position: center;
+    }
+    #particle-canvas { position: absolute; top: 0; left: 0; }
     .container {
-      position: relative; z-index: 1; display: flex; flex-direction: column;
-      height: 100%; padding: 1.5rem; box-sizing: border-box; overflow-y: auto;
+      display: flex; flex-direction: column; height: 100%;
+      padding: 1.5rem; box-sizing: border-box; overflow-y: auto;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.4) transparent;
     }
+    .container::-webkit-scrollbar { width: 8px; }
+    .container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 4px; }
     
-    /* ─── Holographic Panel Styling ────────────────────────────────── */
     .panel {
       position: relative;
-      background: var(--surface);
-      backdrop-filter: blur(10px);
+      background: var(--panel-bg);
+      backdrop-filter: blur(24px) saturate(180%);
       border: 1px solid var(--border-color);
-      border-radius: 8px; padding: 2rem; margin-bottom: 1.5rem;
-      box-shadow: 0 0 15px rgba(56, 182, 255, 0.1), inset 0 0 10px rgba(56, 182, 255, 0.05);
-      animation: panel-fade-in 0.8s ease-out backwards;
-      opacity: 0;
-      overflow: hidden;
+      border-radius: 16px; padding: 1.5rem; margin-bottom: 1.25rem;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+      animation: panel-fade-in 0.5s ease-out backwards;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    .panel::before, .panel::after { /* Scanline effect */
-        content: ''; position: absolute; left: 0; z-index: 1;
-        width: 100%; height: 1px; background: rgba(56, 182, 255, 0.2);
-        animation: scanline 8s linear infinite;
+    .panel:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 24px 56px rgba(0,0,0,0.6);
     }
-    .panel::after { animation-delay: 0.75s; }
-    @keyframes scanline { from { top: -10%; } to { top: 110%; } }
-    
-    /* Corner brackets */
-    .corner {
-        position: absolute; width: 20px; height: 20px;
-        border: 2px solid var(--glow-color);
-        animation: corner-flicker 4s infinite;
-    }
-    .corner.tl { top: -2px; left: -2px; border-right: none; border-bottom: none; }
-    .corner.tr { top: -2px; right: -2px; border-left: none; border-bottom: none; }
-    .corner.bl { bottom: -2px; left: -2px; border-right: none; border-top: none; }
-    .corner.br { bottom: -2px; right: -2px; border-left: none; border-top: none; }
-    @keyframes corner-flicker { 50% { border-color: rgba(56, 182, 255, 0.5); } }
-    
-    #chartPanel { animation-delay: 0.1s; } #controls { animation-delay: 0.2s; }
+    @keyframes panel-fade-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    #chartPanel { animation-delay: 0.1s; }
+    #controls { animation-delay: 0.2s; }
     .panel:last-child { animation-delay: 0.3s; }
-    #chartContainer { height: 320px; position: relative; }
     
-    /* ─── Typography & Effects ─────────────────────────────────────── */
-    h1 {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 2.5rem; text-align: center;
-      letter-spacing: 4px; text-transform: uppercase;
-      text-shadow: 0 0 5px #fff, 0 0 15px var(--glow-color), 0 0 30px var(--glow-color);
-      animation: text-glitch 6s infinite alternate;
+    .traffic-lights {
+        position: absolute; top: 1rem; left: 1rem; display: flex; gap: 8px;
     }
-    @keyframes text-glitch {
-        50% { text-shadow: 0 0 5px #fff, 0 0 15px #f472b6, 0 0 30px #f472b6; transform: skewX(-1deg); }
-    }
-    h2 { font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
+    .traffic-light { width: 12px; height: 12px; border-radius: 50%; }
+    .tl-red { background: #FF5F57; }
+    .tl-yellow { background: #FEBC2E; }
+    .tl-green { background: #28C840; }
     
-    /* ... other styles for buttons, inputs, table are similarly themed ... */
-    .btn, .circle-btn {
-        font-family: 'Orbitron', sans-serif;
-        background: transparent; border: 1px solid var(--border-color); color: var(--text-primary);
-        transition: all 0.2s; box-shadow: 0 0 5px rgba(56, 182, 255, 0.1);
+    h1, h2 { padding-left: 50px; }
+    h1 { font-size: 2.25rem; font-weight: 700; text-align: left; margin-bottom: .25rem; }
+    p.subtitle { text-align: left; padding-left: 50px; color: var(--text-secondary); margin-bottom: 2rem; }
+    h2 { font-weight: 600; font-size: 1.25rem; margin: 0 0 1rem 0; }
+    #chartContainer { height: 320px; }
+    canvas { width:100% !important; height:100% !important; }
+    .row { display:flex; align-items:center; justify-content:center; gap: 0.75rem; }
+    
+    .btn {
+      background-color: var(--accent-blue); color: #fff; font-weight: 500;
+      border: none; border-radius:8px; padding:.7rem 1.4rem; font-size: 0.9rem;
+      cursor:pointer; transition: all .15s ease-out;
     }
-    .btn:hover, .circle-btn:hover {
-        background: var(--surface); color: #fff;
-        border-color: var(--glow-color);
-        box-shadow: 0 0 15px var(--glow-color);
+    .btn:hover { filter: brightness(1.1); }
+    .btn:active { transform: scale(.96); filter: brightness(0.9); }
+    
+    .circle-btn {
+      width:36px; height:36px; background: rgba(120, 120, 128, 0.2);
+      color: var(--text-secondary); border: 1px solid transparent;
+      border-radius:50%; display:grid; place-items:center; cursor:pointer;
+      transition: all .15s ease-out;
     }
+    .circle-btn:hover { background: rgba(120, 120, 128, 0.4); color: var(--text-primary); }
+    .circle-btn:active { transform: scale(.92); background: rgba(120, 120, 128, 0.6); }
+    .circle-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    
+    select, input[type=number] {
+      width:100%; padding:.7rem; background: rgba(120, 120, 128, 0.2);
+      border:1px solid transparent; border-radius:8px; color:var(--text-primary);
+      font-size:1rem; transition: all 0.2s;
+    }
+    select:focus, input:focus {
+        outline: none; border-color: var(--accent-blue);
+        box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.4);
+    }
+    
+    table { width:100%; border-collapse:separate; border-spacing: 0; margin-top:.75rem; }
+    th, td { padding:.8rem 1rem; border-bottom:1px solid var(--border-color); }
+    th:not(:first-child), td:not(:first-child) { text-align: right; }
+    th { color:var(--text-secondary); font-weight: 500; font-size: 0.9rem;}
+    tbody tr { transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.2s ease; }
+    tbody tr.hovered { transform: scale(1.05) translateX(10px); background: var(--panel-bg); border-radius: 8px; }
+    tbody tr.prev-hovered, tbody tr.next-hovered { transform: scale(1.02) translateX(5px); }
   </style>
 </head>
 <body>
-  <canvas id="webgl-bg"></canvas>
+  <div id="interactive-background"><canvas id="particle-canvas"></canvas></div>
   <div class="container">
-    <h1>Holo-Chain Tracker</h1>
+    <h1>Dividend Tracker</h1><p class="subtitle">macOS Pro Edition</p>
     <div id="chartPanel" class="panel">
-      <div class="corner tl"></div><div class="corner tr"></div>
-      <div class="corner bl"></div><div class="corner br"></div>
-      <h2>Performance Matrix</h2>
-      <div id="chartContainer">
-          <canvas id="chart"></canvas>
-          <canvas id="threejs-overlay"></canvas>
-      </div>
+        <div class="traffic-lights"><div class="tl-red"></div><div class="tl-yellow"></div><div class="tl-green"></div></div>
+        <h2>Performance</h2><div id="chartContainer"><canvas id="chart"></canvas></div>
     </div>
+    <div id="controls" class="panel">
+        <div class="traffic-lights"><div class="tl-red"></div><div class="tl-yellow"></div><div class="tl-green"></div></div>
+        <h2>Controls</h2>
+        <div class="row space">
+            <button id="delPrev" class="circle-btn" title="Delete Earliest Epoch"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 8H13.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button id="addPrev" class="circle-btn" title="Add Earlier Epoch"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2.5V13.5M2.5 8H13.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button id="addNext" class="circle-btn" title="Add Later Epoch"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2.5V13.5M2.5 8H13.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button id="delNext" class="circle-btn" title="Delete Latest Epoch"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 8H13.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <div class="row" style="margin:1rem 0;">
+            <button id="prev" class="circle-btn"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 13L5 8L10 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <span id="epochNum" style="font-size:1.25rem; font-weight:600; flex-grow:1; text-align:center;">Epoch #1</span>
+            <button id="next" class="circle-btn"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 3L11 8L6 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <div id="epochRange" style="text-align:center;color:var(--text-secondary);margin-bottom:1.5rem;">Loading…</div>
+        <div class="grid">
+            <select id="crypto"><option value="">Choose Crypto</option><option value="pharaoh">Pharaoh</option><option value="velodrome">Velodrome</option></select>
+            <input id="amount" type="number" placeholder="Amount (USD)"/>
+            <button id="addBtn" class="btn">Add / Update</button>
+        </div>
     </div>
+    <div class="panel">
+        <div class="traffic-lights"><div class="tl-red"></div><div class="tl-yellow"></div><div class="tl-green"></div></div>
+        <h2>Summary</h2>
+        <table><thead><tr><th>Epoch #</th><th>Pharaoh</th><th>Velodrome</th><th>Total</th></tr></thead><tbody id="tableBody"></tbody></table>
+    </div>
+  </div>
 
-  <script>
-  // This is a highly simplified representation of the full code, as the actual
-  // implementation for all the requested features would be thousands of lines long.
-  // The full code would be provided in a real-world scenario.
+<script>
+window.onload = function() {
+    const STORAGE = 'divTrackerLux';
+    const loadData = () => JSON.parse(localStorage.getItem(STORAGE) || '{}');
+    const saveData = d => localStorage.setItem(STORAGE, JSON.stringify(d));
 
-  // ===================================================================
-  // PSEUDO-CODE & CONCEPTUAL IMPLEMENTATION
-  // ===================================================================
-
-  window.onload = function() {
-    
-    // --- 1. Initialize Sound Engine (howler.js) ---
+    // --- Sound Engine ---
     const sounds = {
-      ambient: new Howl({ src: ['/sounds/ambient.mp3'], loop: true, volume: 0.1 }),
-      confirm: new Howl({ src: ['/sounds/confirm.wav'], volume: 0.5 }),
-      navigate: new Howl({ src: ['/sounds/swoosh.wav'], volume: 0.4 }),
-      hover: new Howl({ src: ['/sounds/click.wav'], volume: 0.3 }),
+        hover: new Howl({ src: ['https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-designe-elements/designe_elements_ui_digital_beep_soft_click_single_001.mp3'], volume: 0.3 }),
+        swoosh: new Howl({ src: ['https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-designe-elements/designe_elements_ui_digital_whoosh_soft_fast_001.mp3'], volume: 0.4 }),
+        confirm: new Howl({ src: ['https://www.zapsplat.com/wp-content/uploads/2015/sound-effects-little-robot-sound-factory/little_robot_sound_factory_ui_Digital_Button_Ping_01.mp3'], volume: 0.5 }),
     };
-    // document.body.addEventListener('click', () => sounds.ambient.play(), { once: true });
 
-    // --- 2. Initialize WebGL Background (twigl.js) ---
-    const gl = document.getElementById('webgl-bg').getContext('webgl');
-    const twigl = new Twigl(gl);
-    const shaderProgram = twigl.createProgram(
-        // Vertex Shader
-        `attribute vec2 position; void main() { gl_Position = vec4(position, 0.0, 1.0); }`,
-        // Fragment Shader (GLSL for the grid effect)
-        `precision mediump float; uniform vec2 resolution; uniform float time; uniform vec2 mouse;
-         void main() {
-             vec2 uv = gl_FragCoord.xy / resolution.xy;
-             // Complex grid, distortion, and glow logic here...
-             float grid = 0.0; // Placeholder for grid calculation
-             float dist = distance(uv, mouse);
-             grid += smoothstep(0.1, 0.0, dist);
-             gl_FragColor = vec4(vec3(grid * 0.1, grid * 0.5, grid * 1.0), 1.0);
-         }`
-    );
-    // Animation loop for the background shader
-    // ...
+    // --- Interactive Particle Background ---
+    const particleCanvas = document.getElementById('particle-canvas');
+    const pCtx = particleCanvas.getContext('2d');
+    let particles = [];
+    let mouse = { x: null, y: null, radius: 150 };
 
-    // --- 3. Initialize 3D Crystal Chart (THREE.js & Custom Plugin) ---
-    const threeCanvas = document.getElementById('threejs-overlay');
-    const renderer = new THREE.WebGLRenderer({ canvas: threeCanvas, alpha: true });
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera();
-    // Logic to sync three.js camera with chart.js camera...
-
-    const HoloCrystalController = class extends Chart.controllers.bar {
-        // This would extend the bar controller
-        draw() {
-            // This method would be overridden. Instead of ctx.rect,
-            // it would update the positions and scales of THREE.js meshes
-            // in the `scene` object.
-            // For example:
-            // const bar = this.getMeta().data[0];
-            // const three_mesh = scene.children[0];
-            // three_mesh.position.set(bar.x, bar.y, 0);
-            // three_mesh.scale.set(bar.width, bar.height, 1);
-        }
-    };
-    HoloCrystalController.id = 'holocrystal';
-    Chart.register(HoloCrystalController);
-    
-    // The Chart.js instance would be created with type: 'holocrystal'
-    const chart = new Chart(document.getElementById('chart'), {
-        type: 'holocrystal',
-        // ... all other config ...
-    });
-    
-    // The main render loop for THREE.js
-    function animate3D() {
-        requestAnimationFrame(animate3D);
-        // ... update crystal shader uniforms (for energy flow)
-        renderer.render(scene, camera);
+    function resizeParticleCanvas() {
+        particleCanvas.width = window.innerWidth;
+        particleCanvas.height = window.innerHeight;
     }
-    animate3D();
-
-    // --- 4. Core Application Logic (as before but adapted) ---
-    // The data handling, epoch logic, etc., would remain,
-    // but the `render` function would now just call `chart.update()`
-    // which would trigger the custom `HoloCrystalController` to update the 3D scene.
-    // The typewriter and particle effects would be triggered from the `render`
-    // and event listener functions.
+    resizeParticleCanvas();
+    window.addEventListener('resize', resizeParticleCanvas);
+    window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
+    window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
     
-    console.log("Ultimate 'Holo-Chain' Tracker Initialized.");
-  };
-  </script>
+    class Particle {
+        constructor() {
+            this.x = Math.random() * particleCanvas.width;
+            this.y = Math.random() * particleCanvas.height;
+            this.size = Math.random() * 1.5 + 1;
+            this.speedX = Math.random() * 0.4 - 0.2;
+            this.speedY = Math.random() * 0.4 - 0.2;
+            this.color = 'rgba(161, 161, 166, 0.8)';
+        }
+        update() {
+            if (this.x > particleCanvas.width || this.x < 0) this.speedX = -this.speedX;
+            if (this.y > particleCanvas.height || this.y < 0) this.speedY = -this.speedY;
+            this.x += this.speedX;
+            this.y += this.speedY;
+        }
+        draw() {
+            pCtx.fillStyle = this.color;
+            pCtx.beginPath();
+            pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            pCtx.fill();
+        }
+    }
+
+    function initParticles() {
+        for (let i = 0; i < 80; i++) particles.push(new Particle());
+    }
+
+    function connectParticles() {
+        let opacityValue = 1;
+        for (let a = 0; a < particles.length; a++) {
+            for (let b = a; b < particles.length; b++) {
+                let distance = ((particles[a].x - particles[b].x) * (particles[a].x - particles[b].x)) +
+                               ((particles[a].y - particles[b].y) * (particles[a].y - particles[b].y));
+                if (distance < (particleCanvas.width/7) * (particleCanvas.height/7)) {
+                    opacityValue = 1 - (distance/20000);
+                    pCtx.strokeStyle = `rgba(161, 161, 166, ${opacityValue})`;
+                    pCtx.lineWidth = 1;
+                    pCtx.beginPath();
+                    pCtx.moveTo(particles[a].x, particles[a].y);
+                    pCtx.lineTo(particles[b].x, particles[b].y);
+                    pCtx.stroke();
+                }
+            }
+        }
+    }
+    
+    function animateParticles() {
+        pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        connectParticles();
+        requestAnimationFrame(animateParticles);
+    }
+    initParticles();
+    animateParticles();
+
+
+    // --- Core App Logic ---
+    let epochs = (() => {
+        const d = loadData(), ks = Object.keys(d);
+        const cur = keyFmt(epochStart(new Date()));
+        if (!ks.includes(cur)) ks.push(cur);
+        return ks.sort();
+    })();
+    let current = epochs.indexOf(keyFmt(epochStart(new Date())));
+    if (current === -1 && epochs.length > 0) current = epochs.length - 1;
+
+    function epochStart(d) {
+      const day = d.getDay(), diff = day>=4 ? day-4 : day+3;
+      const s = new Date(d); s.setDate(d.getDate()-diff);
+      return new Date(s.getFullYear(),s.getMonth(),s.getDate());
+    }
+    const keyFmt = d => d.toISOString().slice(0,10);
+    function labelFmt(s) {
+      const e = new Date(s); e.setDate(s.getDate()+6);
+      const o={month:'short',day:'numeric'};
+      return `${s.toLocaleDateString(undefined,o)} – ${e.toLocaleDateString(undefined,o)}, ${e.getFullYear()}`;
+    }
+
+    const chartCtx = document.getElementById('chart').getContext('2d');
+    const pharaohGradient = chartCtx.createLinearGradient(0, 0, 0, 320);
+    pharaohGradient.addColorStop(0, 'rgba(248, 113, 113, 0.9)');
+    pharaohGradient.addColorStop(1, 'rgba(239, 68, 68, 0.7)');
+    const velodromeGradient = chartCtx.createLinearGradient(0, 0, 0, 320);
+    velodromeGradient.addColorStop(0, 'rgba(96, 165, 250, 0.9)');
+    velodromeGradient.addColorStop(1, 'rgba(59, 130, 246, 0.7)');
+
+    const chart = new Chart(chartCtx, {
+      type: 'bar',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Pharaoh', data: [], backgroundColor: pharaohGradient,
+            borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderRadius: 6,
+          },
+          {
+            label: 'Velodrome', data: [], backgroundColor: velodromeGradient,
+            borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderRadius: 6,
+          }
+        ]
+      },
+      options: {
+        animation: { duration: 1000, easing: 'easeOutQuart' },
+        responsive: true, maintainAspectRatio: false, layout: { padding: { top: 20 } },
+        scales: {
+          x: { stacked: true, ticks: { color: 'var(--text-primary)' }, grid: { display: false } },
+          y: { stacked: true, ticks: { color: 'var(--text-primary)', callback: (v) => '$' + v }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
+        },
+        plugins: {
+          legend: { labels: { color: 'var(--text-primary)' } },
+          tooltip: {
+            backgroundColor: 'rgba(20,20,20,0.8)', padding: 12, cornerRadius: 8,
+            titleFont: { weight: '600' },
+            callbacks: { title: ctx => prepare()[ctx[0].dataIndex].label },
+          }
+        }
+      }
+    });
+
+    function prepare() {
+        const d = loadData();
+        return epochs.map((k,i) => {
+            const v = d[k] || { pharaoh:0, velodrome:0 };
+            return {
+                key: k, idx: i+1, label: labelFmt(new Date(k)),
+                pharaoh: v.pharaoh || 0, velodrome: v.velodrome || 0,
+                total: (v.pharaoh || 0) + (v.velodrome || 0)
+            };
+        });
+    }
+
+    let tableRows = [];
+    function setupDockEffect() {
+        tableRows = Array.from(document.querySelectorAll('#tableBody tr'));
+        tableRows.forEach((row, index) => {
+            row.addEventListener('mouseenter', () => {
+                sounds.hover.play();
+                tableRows.forEach(r => r.classList.remove('hovered', 'prev-hovered', 'next-hovered'));
+                row.classList.add('hovered');
+                if (tableRows[index-1]) tableRows[index-1].classList.add('prev-hovered');
+                if (tableRows[index+1]) tableRows[index+1].classList.add('next-hovered');
+            });
+        });
+        document.querySelector('#tableBody').addEventListener('mouseleave', () => {
+             tableRows.forEach(r => r.classList.remove('hovered', 'prev-hovered', 'next-hovered'));
+        });
+    }
+
+    function render() {
+      const arr = prepare();
+      if (!arr.length) return;
+      chart.data.labels = arr.map(x => `Epoch #${x.idx}`);
+      chart.data.datasets[0].data = arr.map(x => x.pharaoh);
+      chart.data.datasets[1].data = arr.map(x => x.velodrome);
+      chart.update();
+      if (current >= arr.length) current = arr.length - 1;
+      document.getElementById('epochNum').textContent = `Epoch #${arr[current].idx}`;
+      document.getElementById('epochRange').textContent = arr[current].label;
+      document.getElementById('prev').disabled = (current === 0);
+      document.getElementById('next').disabled = (current === arr.length - 1);
+      const formatCurrency = (num) => `$${num.toFixed(2)}`;
+      document.getElementById('tableBody').innerHTML = arr.map(x => `
+        <tr><td>${x.idx}</td><td style="color:var(--pharaoh-color);">${formatCurrency(x.pharaoh)}</td><td style="color:var(--velodrome-color);">${formatCurrency(x.velodrome)}</td><td style="font-weight:600;">${formatCurrency(x.total)}</td></tr>
+      `).reverse().join('');
+      setupDockEffect();
+    }
+
+    // Add sound to navigation
+    document.querySelectorAll('#prev, #next, #addPrev, #addNext, #delPrev, #delNext').forEach(btn => {
+        btn.addEventListener('click', () => sounds.swoosh.play());
+    });
+    document.getElementById('addBtn').addEventListener('click', () => sounds.confirm.play());
+    
+    // Original event listeners
+    document.getElementById('addPrev').onclick = () => { let d=new Date(epochs[0]); d.setDate(d.getDate()-7); epochs.unshift(keyFmt(d)); current=0; render(); };
+    document.getElementById('delPrev').onclick = () => { if(epochs.length>1){ epochs.shift(); if(current>0) current--; render(); } };
+    document.getElementById('addNext').onclick = () => { let d=new Date(epochs[epochs.length-1]); d.setDate(d.getDate()+7); epochs.push(keyFmt(d)); current=epochs.length-1; render(); };
+    document.getElementById('delNext').onclick = () => { if(epochs.length>1){ epochs.pop(); if(current>=epochs.length) current=epochs.length-1; render(); } };
+    document.getElementById('prev').onclick    = () => { if(current>0) current--; render(); };
+    document.getElementById('next').onclick    = () => { if(current<epochs.length-1) current++; render(); };
+    document.getElementById('addBtn').onclick  = () => {
+      const c = document.getElementById('crypto').value;
+      const a = parseFloat(document.getElementById('amount').value);
+      if(!c||isNaN(a)) return alert('Please select a crypto and enter a valid amount.');
+      let d = loadData(), k=epochs[current];
+      d[k] = d[k]||{ pharaoh:0, velodrome:0 };
+      d[k][c] = a;
+      saveData(d); document.getElementById('amount').value=''; render();
+    };
+
+    render();
+};
+</script>
 </body>
 </html>
