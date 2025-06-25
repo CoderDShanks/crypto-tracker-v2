@@ -23,23 +23,10 @@
       font-family: 'Inter', sans-serif;
       color: var(--text-primary);
     }
-    body::before {
-        content: ''; position: absolute; top: 0; left: 0;
-        width: 100%; height: 100%;
-        background-image:
-            linear-gradient(to right, rgba(60, 60, 60, 0.2) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(60, 60, 60, 0.2) 1px, transparent 1px);
-        background-size: 3rem 3rem;
-        animation: bg-pan 60s linear infinite;
-        opacity: 0.5;
-    }
-    @keyframes bg-pan { from { background-position: 0 0; } to { background-position: -3rem 0; } }
     .container {
       display: flex; flex-direction: column; height: 100%;
       padding: 1.5rem; box-sizing: border-box; overflow-y: auto;
-      -ms-overflow-style: none; scrollbar-width: none;
     }
-    .container::-webkit-scrollbar { display: none; }
     h1 {
       font-size: 2.25rem; font-weight: 700; text-align: center;
       margin-bottom: .25rem; letter-spacing: -1px;
@@ -53,13 +40,7 @@
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 16px; padding: 1.5rem; margin-bottom: 1.25rem;
       box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-      animation: panel-fade-in 0.6s ease-out backwards;
-      opacity: 0;
     }
-    @keyframes panel-fade-in { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-    #chartPanel { animation-delay: 0.1s; }
-    #controls { animation-delay: 0.2s; }
-    .panel:last-child { animation-delay: 0.3s; }
     #chartContainer { height: 320px; }
     canvas { width:100% !important; height:100% !important; }
     .row { display:flex; align-items:center; justify-content:center; gap: 0.75rem; }
@@ -95,19 +76,10 @@
         outline: none; border-color: var(--text-primary);
         box-shadow: 0 0 0 3px rgba(241, 241, 241, 0.3);
     }
-    select {
-      appearance:none;
-      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%238E8E93' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
-      background-repeat:no-repeat; background-position:right 1rem center;
-    }
-    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    input[type=number] { -moz-appearance: textfield; }
     table { width:100%; border-collapse:collapse; margin-top:.75rem; }
     th, td { padding:.8rem 1rem; border-bottom:1px solid var(--border); }
     th:not(:first-child), td:not(:first-child) { text-align: right; }
     th { color:var(--text-secondary); font-weight: 500; font-size: 0.9rem;}
-    tbody tr { transition: background-color 0.2s ease; }
-    tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
   </style>
 </head>
 <body>
@@ -145,108 +117,181 @@
   </div>
 
 <script>
-window.onload = function() {
-    const STORAGE = 'divTrackerLux';
-    const loadData = () => JSON.parse(localStorage.getItem(STORAGE) || '{}');
-    const saveData = d => localStorage.setItem(STORAGE, JSON.stringify(d));
+document.addEventListener('DOMContentLoaded', () => {
+    // DOM Elements
+    const epochNumEl = document.getElementById('epochNum');
+    const epochRangeEl = document.getElementById('epochRange');
+    const prevBtn = document.getElementById('prev');
+    const nextBtn = document.getElementById('next');
+    const tableBody = document.getElementById('tableBody');
+    const cryptoSelect = document.getElementById('crypto');
+    const amountInput = document.getElementById('amount');
+    
+    // Constants
+    const STORAGE_KEY = 'divTrackerLux';
 
-    function epochStart(d) {
-      const day = d.getDay(), diff = day>=4 ? day-4 : day+3;
-      const s = new Date(d); s.setDate(d.getDate()-diff);
-      return new Date(s.getFullYear(),s.getMonth(),s.getDate());
-    }
-    const keyFmt = d => d.toISOString().slice(0,10);
-    function labelFmt(s) {
-      const e = new Date(s); e.setDate(s.getDate()+6);
-      const o={month:'short',day:'numeric'};
-      return `${s.toLocaleDateString(undefined,o)} – ${e.toLocaleDateString(undefined,o)}, ${e.getFullYear()}`;
-    }
+    // State
+    let epochs = [];
+    let currentEpochIndex = 0;
 
-    let epochs = (() => {
-        const d = loadData(), ks = Object.keys(d);
-        const cur = keyFmt(epochStart(new Date()));
-        if (!ks.includes(cur)) ks.push(cur);
-        return ks.sort();
-    })();
-    let current = epochs.indexOf(keyFmt(epochStart(new Date())));
-    if (current === -1 && epochs.length > 0) current = epochs.length - 1;
-
+    // --- Chart.js Initialization ---
     const ctx = document.getElementById('chart').getContext('2d');
     const chart = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: [],
         datasets: [
-          { label: 'Pharaoh', data: [], backgroundColor: 'rgba(239, 68, 68, 0.8)', borderColor: 'var(--pharaoh-color)', borderWidth: 1 },
-          { label: 'Velodrome', data: [], backgroundColor: 'rgba(56, 122, 223, 0.8)', borderColor: 'var(--velodrome-color)', borderWidth: 1 }
+          { label: 'Pharaoh', data: [], backgroundColor: 'rgba(239, 68, 68, 0.8)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1 },
+          { label: 'Velodrome', data: [], backgroundColor: 'rgba(56, 122, 223, 0.8)', borderColor: 'rgba(56, 122, 223, 1)', borderWidth: 1 }
         ]
       },
       options: {
-        animation: { duration: 1000, easing: 'easeOutQuart' },
+        animation: { duration: 800, easing: 'easeOutQuart' },
         responsive: true, maintainAspectRatio: false,
         scales: {
           x: { stacked: true, ticks: { color: 'var(--text-primary)' }, grid: { display: false } },
-          y: { stacked: true, ticks: { color: 'var(--text-primary)', callback: (v) => '$' + v }, grid: { color: 'rgba(255, 255, 255, 0.05)' } }
+          y: { stacked: true, ticks: { color: 'var(--text-primary)', callback: (v) => `$${v}` }, grid: { color: 'rgba(255, 255, 255, 0.05)' } }
         },
         plugins: {
           legend: { labels: { color: 'var(--text-primary)' } },
           tooltip: {
             backgroundColor: 'rgba(10,10,10,0.8)', padding: 12, cornerRadius: 8,
             titleFont: { weight: '600' },
-            callbacks: { title: ctx => prepare()[ctx[0].dataIndex].label },
+            callbacks: { title: (ctx) => labelFmt(new Date(epochs[ctx[0].dataIndex])) },
           }
         }
       }
     });
 
-    function prepare() {
-        const d = loadData();
-        return epochs.map((k,i) => {
-            const v = d[k] || { pharaoh:0, velodrome:0 };
-            return { key: k, idx: i+1, label: labelFmt(new Date(k)), pharaoh: v.pharaoh || 0, velodrome: v.velodrome || 0, total: (v.pharaoh || 0) + (v.velodrome || 0) };
-        });
-    }
-
-    function render() {
-      const arr = prepare();
-      chart.data.labels = arr.map(x => `Epoch #${x.idx}`);
-      chart.data.datasets[0].data = arr.map(x => x.pharaoh);
-      chart.data.datasets[1].data = arr.map(x => x.velodrome);
-      chart.update();
-      if (current >= arr.length && arr.length > 0) current = arr.length - 1;
-      if (arr.length > 0) {
-        document.getElementById('epochNum').textContent = `Epoch #${arr[current].idx}`;
-        document.getElementById('epochRange').textContent = arr[current].label;
-      } else {
-        document.getElementById('epochNum').textContent = 'No Data';
-        document.getElementById('epochRange').textContent = 'Add an epoch and data to begin';
-      }
-      document.getElementById('prev').disabled = (current === 0);
-      document.getElementById('next').disabled = (current === arr.length - 1);
-      const formatCurrency = (num) => `$${num.toFixed(2)}`;
-      document.getElementById('tableBody').innerHTML = arr.map(x => `
-        <tr><td>${x.idx}</td><td style="color:var(--pharaoh-color);">${formatCurrency(x.pharaoh)}</td><td style="color:var(--velodrome-color);">${formatCurrency(x.velodrome)}</td><td style="font-weight:600;">${formatCurrency(x.total)}</td></tr>
-      `).reverse().join('');
-    }
-
-    document.getElementById('addPrev').onclick = () => { if (epochs.length > 0) { let d=new Date(epochs[0]); d.setDate(d.getDate()-7); epochs.unshift(keyFmt(d)); } else { epochs.unshift(keyFmt(epochStart(new Date()))); } current=0; render(); };
-    document.getElementById('delPrev').onclick = () => { if(epochs.length>1){ epochs.shift(); if(current>0) current--; render(); } };
-    document.getElementById('addNext').onclick = () => { let d=new Date(epochs[epochs.length-1]); d.setDate(d.getDate()+7); epochs.push(keyFmt(d)); current=epochs.length-1; render(); };
-    document.getElementById('delNext').onclick = () => { if(epochs.length>1){ epochs.pop(); if(current>=epochs.length) current=epochs.length-1; render(); } };
-    document.getElementById('prev').onclick = () => { if(current>0) current--; render(); };
-    document.getElementById('next').onclick = () => { if(current<epochs.length-1) current++; render(); };
-    document.getElementById('addBtn').onclick = () => {
-      if (epochs.length === 0) { alert("Please add an epoch first using the '＋' buttons."); return; }
-      const c = document.getElementById('crypto').value;
-      const a = parseFloat(document.getElementById('amount').value);
-      if(!c||isNaN(a)) return alert('Please select a crypto and enter a valid amount.');
-      let d = loadData(), k=epochs[current];
-      d[k] = d[k]||{ pharaoh:0, velodrome:0 };
-      d[k][c] = a;
-      saveData(d); document.getElementById('amount').value=''; render();
+    // --- Utility Functions ---
+    const loadData = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    const saveData = (data) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    const epochStart = (d) => {
+      const day = d.getDay(), diff = day >= 4 ? day - 4 : day + 3;
+      const s = new Date(d); s.setDate(d.getDate() - diff);
+      s.setHours(0, 0, 0, 0);
+      return s;
     };
-    render();
-};
+    const keyFmt = (d) => d.toISOString().slice(0,10);
+    const labelFmt = (s) => {
+      const e = new Date(s); e.setDate(s.getDate() + 6);
+      const o = { month:'short', day:'numeric' };
+      return `${s.toLocaleDateString(undefined,o)} – ${e.toLocaleDateString(undefined,o)}, ${e.getFullYear()}`;
+    };
+    const formatCurrency = (num) => `$${num.toFixed(2)}`;
+
+    // --- Main Render Function ---
+    function render() {
+        const data = loadData();
+        const preparedData = epochs.map((epochKey, index) => {
+            const epochData = data[epochKey] || { pharaoh: 0, velodrome: 0 };
+            return {
+                idx: index + 1,
+                key: epochKey,
+                label: labelFmt(new Date(epochKey)),
+                pharaoh: epochData.pharaoh || 0,
+                velodrome: epochData.velodrome || 0,
+                total: (epochData.pharaoh || 0) + (epochData.velodrome || 0),
+            };
+        });
+
+        // Update Chart
+        chart.data.labels = preparedData.map(d => `Epoch #${d.idx}`);
+        chart.data.datasets[0].data = preparedData.map(d => d.pharaoh);
+        chart.data.datasets[1].data = preparedData.map(d => d.velodrome);
+        chart.update();
+
+        // Update Controls
+        if (epochs.length > 0 && preparedData[currentEpochIndex]) {
+            epochNumEl.textContent = `Epoch #${preparedData[currentEpochIndex].idx}`;
+            epochRangeEl.textContent = preparedData[currentEpochIndex].label;
+        } else {
+            epochNumEl.textContent = 'No Data';
+            epochRangeEl.textContent = 'Add an epoch to begin';
+        }
+        prevBtn.disabled = (currentEpochIndex === 0);
+        nextBtn.disabled = (currentEpochIndex >= epochs.length - 1);
+
+        // Update Table
+        tableBody.innerHTML = preparedData.map(d => `
+            <tr>
+                <td>${d.idx}</td>
+                <td style="color:var(--pharaoh-color);">${formatCurrency(d.pharaoh)}</td>
+                <td style="color:var(--velodrome-color);">${formatCurrency(d.velodrome)}</td>
+                <td style="font-weight:600;">${formatCurrency(d.total)}</td>
+            </tr>
+        `).reverse().join('');
+    }
+
+    // --- Event Listeners ---
+    document.getElementById('addPrev').onclick = () => {
+        const firstDate = epochs.length > 0 ? new Date(epochs[0]) : epochStart(new Date());
+        firstDate.setDate(firstDate.getDate() - 7);
+        epochs.unshift(keyFmt(firstDate));
+        currentEpochIndex = 0;
+        render();
+    };
+    document.getElementById('delPrev').onclick = () => {
+        if(epochs.length > 1){
+            epochs.shift();
+            if(currentEpochIndex > 0) currentEpochIndex--;
+            render();
+        }
+    };
+    document.getElementById('addNext').onclick = () => {
+        const lastDate = epochs.length > 0 ? new Date(epochs[epochs.length - 1]) : epochStart(new Date());
+        lastDate.setDate(lastDate.getDate() + 7);
+        epochs.push(keyFmt(lastDate));
+        currentEpochIndex = epochs.length - 1;
+        render();
+    };
+    document.getElementById('delNext').onclick = () => {
+        if(epochs.length > 1){
+            epochs.pop();
+            if(currentEpochIndex >= epochs.length) currentEpochIndex = epochs.length - 1;
+            render();
+        }
+    };
+    prevBtn.onclick = () => { if(currentEpochIndex > 0) { currentEpochIndex--; render(); } };
+    nextBtn.onclick = () => { if(currentEpochIndex < epochs.length - 1) { currentEpochIndex++; render(); } };
+    document.getElementById('addBtn').onclick = () => {
+      if (epochs.length === 0) {
+        alert("Please add an epoch first using the '＋' buttons.");
+        return;
+      }
+      const crypto = cryptoSelect.value;
+      const amount = parseFloat(amountInput.value);
+      if(!crypto || isNaN(amount)) {
+        alert('Please select a crypto and enter a valid amount.');
+        return;
+      }
+      const data = loadData();
+      const key = epochs[currentEpochIndex];
+      if (!data[key]) data[key] = { pharaoh: 0, velodrome: 0 };
+      data[key][crypto] = amount;
+      saveData(data);
+      amountInput.value = '';
+      render();
+    };
+    
+    // --- Initial Load ---
+    function initialize() {
+        const data = loadData();
+        epochs = Object.keys(data).sort();
+        const currentEpochKey = keyFmt(epochStart(new Date()));
+        if (epochs.indexOf(currentEpochKey) === -1) {
+            epochs.push(currentEpochKey);
+            epochs.sort();
+        }
+        currentEpochIndex = epochs.indexOf(currentEpochKey);
+        if (currentEpochIndex === -1 && epochs.length > 0) {
+            currentEpochIndex = epochs.length - 1;
+        }
+        render();
+    }
+
+    initialize();
+});
 </script>
 </body>
 </html>
