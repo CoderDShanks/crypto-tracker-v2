@@ -104,13 +104,11 @@
     input[type=number] { -moz-appearance: textfield; }
     table { width:100%; border-collapse:collapse; margin-top:.75rem; }
     th, td { padding:.8rem 1rem; border-bottom:1px solid var(--border); }
-    th { color:var(--text-secondary); font-weight: 500; font-size: 0.9rem;}
-    /* ** FIXED: Align numeric headers to the right ** */
     th:not(:first-child) { text-align: right; }
     th:first-child { text-align: left; }
     td:not(:first-child) { text-align: right; }
     td:first-child { text-align: left; }
-
+    th { color:var(--text-secondary); font-weight: 500; font-size: 0.9rem;}
     tbody tr { transition: background-color 0.2s ease; }
     tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
   </style>
@@ -186,10 +184,7 @@
     } else if (current === -1) {
         current = 0;
     }
-    
-    // =================================================================
-    // ** NEW: Custom Plugin for Glass Reflection Effect **
-    // =================================================================
+
     let hoveredElement = null;
     let mousePosition = null;
 
@@ -197,13 +192,15 @@
         id: 'glassReflection',
         afterEvent: (chart, args, options) => {
             const event = args.event;
-            if (event.type === 'mousemove') {
+            const type = event.type;
+
+            if (type === 'mousemove') {
                 const elements = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
                 let needsRender = false;
-
                 if (elements.length > 0) {
-                    if (hoveredElement?._index !== elements[0]._index || hoveredElement?._datasetIndex !== elements[0]._datasetIndex) {
-                        hoveredElement = elements[0];
+                    const el = elements[0];
+                    if (hoveredElement?._index !== el._index || hoveredElement?._datasetIndex !== el._datasetIndex) {
+                        hoveredElement = el;
                         needsRender = true;
                     }
                     mousePosition = { x: event.x, y: event.y };
@@ -212,10 +209,8 @@
                     mousePosition = null;
                     needsRender = true;
                 }
-                if (needsRender) {
-                    chart.draw(); // Redraw chart instead of full render for performance
-                }
-            } else if (event.type === 'mouseout' && hoveredElement) {
+                if (needsRender) chart.draw();
+            } else if (type === 'mouseout' && hoveredElement) {
                 hoveredElement = null;
                 mousePosition = null;
                 chart.draw();
@@ -231,12 +226,12 @@
                 ctx.beginPath();
                 ctx.rect(x - width / 2, y, width, height);
                 ctx.clip();
-
+                
                 const gradient = ctx.createRadialGradient(
                     mousePosition.x, mousePosition.y, 0,
-                    mousePosition.x, mousePosition.y, width * 0.7
+                    mousePosition.x, mousePosition.y, width * 0.8
                 );
-                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
                 gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
                 
                 ctx.fillStyle = gradient;
@@ -248,14 +243,18 @@
     
     const ctx = document.getElementById('chart').getContext('2d');
     
-    // Create Glass Gradients
+    // ** NEW: Create advanced multi-stop gradients for a shiny glass effect **
     const pharaohGradient = ctx.createLinearGradient(0, 0, 0, 320);
-    pharaohGradient.addColorStop(0, 'rgba(239, 68, 68, 1)');
-    pharaohGradient.addColorStop(1, 'rgba(239, 68, 68, 0.4)');
+    pharaohGradient.addColorStop(0, 'rgba(255, 130, 130, 0.9)'); // Bright highlight
+    pharaohGradient.addColorStop(0.1, 'rgba(239, 68, 68, 0.8)');   // Main color
+    pharaohGradient.addColorStop(0.5, 'rgba(200, 50, 50, 0.9)');    // Darker mid-tone
+    pharaohGradient.addColorStop(1, 'rgba(239, 68, 68, 0.85)');  // Lighter bottom
 
     const velodromeGradient = ctx.createLinearGradient(0, 0, 0, 320);
-    velodromeGradient.addColorStop(0, 'rgba(56, 122, 223, 1)');
-    velodromeGradient.addColorStop(1, 'rgba(56, 122, 223, 0.4)');
+    velodromeGradient.addColorStop(0, 'rgba(130, 180, 255, 0.9)');// Bright highlight
+    velodromeGradient.addColorStop(0.1, 'rgba(56, 122, 223, 0.8)'); // Main color
+    velodromeGradient.addColorStop(0.5, 'rgba(40, 90, 180, 0.9)');   // Darker mid-tone
+    velodromeGradient.addColorStop(1, 'rgba(56, 122, 223, 0.85)');// Lighter bottom
 
     const chart = new Chart(ctx, {
       type: 'bar',
@@ -266,17 +265,17 @@
             label: 'Pharaoh',
             data: [],
             backgroundColor: pharaohGradient,
-            borderColor: 'rgba(255,255,255,0.25)',
-            borderWidth: 2,
-            borderRadius: 4,
+            borderColor: 'rgba(255,255,255,0.4)',
+            borderWidth: 1.5,
+            borderRadius: 5,
           },
           {
             label: 'Velodrome',
             data: [],
             backgroundColor: velodromeGradient,
-            borderColor: 'rgba(255,255,255,0.25)',
-            borderWidth: 2,
-            borderRadius: 4,
+            borderColor: 'rgba(255,255,255,0.4)',
+            borderWidth: 1.5,
+            borderRadius: 5,
           }
         ]
       },
