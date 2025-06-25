@@ -2,160 +2,136 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Crypto Dividend Tracker - Arctic Crystal Edition</title>
+  <title>Crypto Dividend Tracker - Minimalist Edition</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --background: #0D1117;
-      --surface: #161B22;
-      --pharaoh-color: #F87171; /* Softer Red */
-      --velodrome-color: #60A5FA; /* Softer Blue */
-      --text-primary: #E6EDF3;
-      --text-secondary: #7D8590;
-      --border: #30363D;
-      --glow-color: rgba(139, 193, 255, 0.4);
+      --background: #111113;
+      --surface: #1C1C1E;
+      --pharaoh-color: #EF4444; /* Red */
+      --velodrome-color: #387ADF; /* Blue */
+      --text-primary: #F1F1F1;
+      --text-secondary: #8E8E93;
+      --border: #3A3A3C;
     }
-    /* ─── Base & Arctic Background ─────────────────────────────────── */
     html, body {
       height: 100%; margin: 0; padding: 0; overflow: hidden;
-      background-color: #03070C;
+      background-color: var(--background);
       font-family: 'Inter', sans-serif;
       color: var(--text-primary);
     }
-    #arctic-scene {
-      position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%;
-      overflow: hidden; pointer-events: none;
-      z-index: -1;
+    body::before {
+        content: ''; position: absolute; top: 0; left: 0;
+        width: 100%; height: 100%;
+        background-image:
+            linear-gradient(to right, rgba(60, 60, 60, 0.2) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(60, 60, 60, 0.2) 1px, transparent 1px);
+        background-size: 3rem 3rem;
+        animation: bg-pan 60s linear infinite;
+        opacity: 0.5;
     }
-    .scene-layer {
-      position: absolute; width: 100%; height: 100%;
-      background-size: cover;
-      background-position: center;
-      animation: pan-scene 120s linear infinite alternate;
-    }
-    #landscape {
-      background-image: url('http://googleusercontent.com/image_generation_content/0');
-      z-index: 1;
-    }
-    #aurora {
-      background: radial-gradient(800px circle at 50% 100%, rgba(60, 130, 223, 0.4), transparent 70%);
-      animation: aurora-sway 20s ease-in-out infinite alternate;
-      mix-blend-mode: screen;
-      z-index: 2;
-    }
-    @keyframes pan-scene { from { background-position: 45% 50%; } to { background-position: 55% 50%; } }
-    @keyframes aurora-sway {
-        from { transform: skewX(-20deg) scale(1.5); opacity: 0.6; }
-        to   { transform: skewX(20deg) scale(1.5); opacity: 1; }
-    }
-    #snow-canvas { position: absolute; z-index: 3; }
-
-    /* ─── Main Layout & Frosted Panels ─────────────────────────────── */
+    @keyframes bg-pan { from { background-position: 0 0; } to { background-position: -3rem 0; } }
     .container {
-      position: relative; z-index: 1;
       display: flex; flex-direction: column; height: 100%;
       padding: 1.5rem; box-sizing: border-box; overflow-y: auto;
       -ms-overflow-style: none; scrollbar-width: none;
     }
     .container::-webkit-scrollbar { display: none; }
+    h1 {
+      font-size: 2.25rem; font-weight: 700; text-align: center;
+      margin-bottom: .25rem; letter-spacing: -1px;
+    }
+    p.subtitle {
+      text-align: center; color: var(--text-secondary);
+      margin-bottom: 2rem; font-weight: 400;
+    }
+    h2 { font-weight: 600; font-size: 1.25rem; margin: 0 0 1rem 0; }
     .panel {
-      position: relative;
-      background: rgba(10, 14, 20, 0.7);
-      backdrop-filter: blur(12px) saturate(150%);
-      border: 1px solid var(--border);
+      background: var(--surface); border: 1px solid var(--border);
       border-radius: 16px; padding: 1.5rem; margin-bottom: 1.25rem;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
       animation: panel-fade-in 0.6s ease-out forwards;
       opacity: 0;
-      transition: transform 0.3s ease;
     }
-    .panel::before {
-        content: ''; position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        border-radius: inherit;
-        background-image: url('https://www.transparenttextures.com/patterns/ice-age.png');
-        opacity: 0;
-        transition: opacity 0.4s ease;
-        pointer-events: none;
-        mix-blend-mode: overlay;
-    }
-    .panel:hover { transform: translateY(-5px); }
-    .panel:hover::before { opacity: 0.1; }
+    @keyframes panel-fade-in { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     #chartPanel { animation-delay: 0.1s; }
     #controls { animation-delay: 0.2s; }
     .panel:last-child { animation-delay: 0.3s; }
-
-    /* ─── Typography & Effects ─────────────────────────────────────── */
-    h1 {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 2.5rem; font-weight: 700; text-align: center;
-      margin-bottom: .25rem; letter-spacing: 2px;
-      text-shadow: 0 0 5px #fff, 0 0 10px var(--glow-color), 0 0 20px var(--glow-color);
-    }
-    /* ... rest of the styling ... */
-    p.subtitle, h2, table, .btn, .circle-btn, select, input, .epoch-text {
-        animation: text-flicker 5s infinite linear;
-    }
-    @keyframes text-flicker {
-        0%, 19.9%, 22%, 62.9%, 64%, 64.9%, 70%, 100% { opacity: 0.99; }
-        20%, 21.9%, 63%, 63.9%, 65%, 69.9% { opacity: 0.4; }
-    }
-    
-    /* ─── Chart & Controls ─────────────────────────────────────────── */
     #chartContainer { height: 320px; }
-    canvas#chart { cursor: crosshair; }
-    
-    /* "Ice Crack" Button Effect */
-    .btn, .circle-btn { position: relative; overflow: hidden; border: 1px solid var(--border); }
-    .btn { background-color: transparent; color: var(--text-primary); /* adjusted for ice theme */ }
-    .circle-btn { background: transparent; }
-    .ice-crack {
-        position: absolute;
-        width: 20px; height: 20px;
-        background: radial-gradient(circle, rgba(255,255,255,0.5) 10%, transparent 70%);
-        border-radius: 50%;
-        opacity: 0;
-        animation: crackle 0.5s ease-out;
+    canvas { width:100% !important; height:100% !important; }
+    .row { display:flex; align-items:center; justify-content:center; gap: 0.75rem; }
+    .row.space { justify-content: flex-end; }
+    .grid { display:flex; flex-wrap:wrap; gap:.75rem; }
+    .grid > * { flex:1; min-width:120px; }
+    .btn {
+      background-color: var(--text-primary); color: var(--background);
+      font-weight: 600; border: none; border-radius:10px;
+      padding:.75rem 1.5rem; font-size:1rem; cursor:pointer;
+      transition: background-color .2s ease, transform .2s ease;
     }
-    @keyframes crackle {
-        from { transform: scale(0.1); opacity: 1; }
-        to { transform: scale(3); opacity: 0; }
+    .btn:hover { background-color: #CCCCCC; }
+    .btn:active { transform: scale(.97); }
+    .circle-btn {
+      width:44px; height:44px; background: rgba(255, 255, 255, 0.05);
+      color: var(--text-secondary); border:1px solid var(--border);
+      border-radius:50%; font-size:1.2rem; cursor:pointer;
+      display:grid; place-items:center; transition: all .2s ease;
     }
-
-    /* Table styling */
+    .circle-btn:hover {
+      background: rgba(255, 255, 255, 0.1); color: var(--text-primary);
+      border-color: var(--text-primary);
+    }
+    .circle-btn:active { transform: scale(.95); }
+    .circle-btn:disabled { opacity: 0.4; cursor: not-allowed; background: transparent; border-color: var(--border); }
+    select, input[type=number] {
+      width:100%; padding:.75rem; background: var(--background);
+      border:1px solid var(--border); border-radius:10px; color:var(--text-primary);
+      font-size:1rem; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    select:focus, input:focus {
+        outline: none; border-color: var(--text-primary);
+        box-shadow: 0 0 0 3px rgba(241, 241, 241, 0.3);
+    }
+    select {
+      appearance:none;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%238E8E93' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+      background-repeat:no-repeat; background-position:right 1rem center;
+    }
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+    table { width:100%; border-collapse:collapse; margin-top:.75rem; }
+    th, td { padding:.8rem 1rem; border-bottom:1px solid var(--border); }
     th:not(:first-child), td:not(:first-child) { text-align: right; }
+    th:first-child, td:first-child { text-align: left; }
+    th { color:var(--text-secondary); font-weight: 500; font-size: 0.9rem;}
+    tbody tr { transition: background-color 0.2s ease; }
+    tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
   </style>
 </head>
 <body>
-  <div id="arctic-scene">
-      <div id="landscape" class="scene-layer"></div>
-      <div id="aurora" class="scene-layer"></div>
-      <canvas id="snow-canvas" class="scene-layer"></canvas>
-  </div>
   <div class="container">
-    <h1>CRYPTO DIVIDENDS</h1>
-    <p class="subtitle">An arctic exploration of your weekly earnings.</p>
+    <h1>Crypto Dividend Tracker</h1>
+    <p class="subtitle">A minimal and elegant way to track your earnings.</p>
     <div id="chartPanel" class="panel">
       <h2>Dividend Performance</h2>
       <div id="chartContainer"><canvas id="chart"></canvas></div>
     </div>
     <div id="controls" class="panel">
       <div class="row space">
-        <button class="circle-btn" id="delPrev" title="Delete Earliest Epoch">−</button>
-        <button class="circle-btn" id="addPrev" title="Add Earlier Epoch">＋</button>
-        <button class="circle-btn" id="addNext" title="Add Later Epoch">＋</button>
-        <button class="circle-btn" id="delNext" title="Delete Latest Epoch">−</button>
+        <button id="delPrev" class="circle-btn" title="Delete Earliest Epoch">−</button>
+        <button id="addPrev" class="circle-btn" title="Add Earlier Epoch">＋</button>
+        <button id="addNext" class="circle-btn" title="Add Later Epoch">＋</button>
+        <button id="delNext" class="circle-btn" title="Delete Latest Epoch">−</button>
       </div>
       <div class="row" style="margin:1rem 0;">
-        <button class="circle-btn" id="prev">&lt;</button>
-        <span id="epochNum" class="epoch-text" style="font-size:1.25rem; font-weight:600; flex-grow:1; text-align:center;">Epoch #1</span>
-        <button class="circle-btn" id="next">&gt;</button>
+        <button id="prev" class="circle-btn">&lt;</button>
+        <span id="epochNum" style="font-size:1.25rem; font-weight:600; flex-grow:1; text-align:center;">Epoch #1</span>
+        <button id="next" class="circle-btn">&gt;</button>
       </div>
-      <div id="epochRange" class="epoch-text" style="text-align:center;color:var(--text-secondary);margin-bottom:1.5rem;">Loading…</div>
+      <div id="epochRange" style="text-align:center;color:var(--text-secondary);margin-bottom:1.5rem;">Loading…</div>
       <div class="grid">
         <select id="crypto">
           <option value="">Choose Crypto</option>
@@ -163,7 +139,7 @@
           <option value="velodrome">Velodrome</option>
         </select>
         <input id="amount" type="number" placeholder="Amount (USD)"/>
-        <button id="addBtn" class="btn">ADD / UPDATE</button>
+        <button id="addBtn" class="btn">Add / Update</button>
       </div>
     </div>
     <div class="panel">
@@ -179,117 +155,20 @@
   <script>
   window.onload = function() {
     const STORAGE = 'divTrackerLux';
-    const loadData = () => JSON.parse(localStorage.getItem(STORAGE) || '{}');
+    const loadData = () => JSON.parse(localStorage.getItem(STORAGE)||'{}');
     const saveData = d => localStorage.setItem(STORAGE, JSON.stringify(d));
-    
-    // =================================================================
-    // ** NEW: Snow/Ice Particle Animation System **
-    // =================================================================
-    const snowCanvas = document.getElementById('snow-canvas');
-    const snowCtx = snowCanvas.getContext('2d');
-    let particles = [];
 
-    function resizeSnowCanvas() {
-        snowCanvas.width = window.innerWidth;
-        snowCanvas.height = window.innerHeight;
+    function epochStart(d) {
+      const day = d.getDay(), diff = day>=4 ? day-4 : day+3;
+      const s = new Date(d); s.setDate(d.getDate()-diff);
+      return new Date(s.getFullYear(),s.getMonth(),s.getDate());
     }
-    resizeSnowCanvas();
-    window.addEventListener('resize', resizeSnowCanvas);
-
-    function createParticle() {
-        return {
-            x: Math.random() * snowCanvas.width,
-            y: Math.random() * snowCanvas.height - snowCanvas.height,
-            vx: Math.random() * 2 - 1,
-            vy: Math.random() * 1 + 0.5,
-            radius: Math.random() * 1.5 + 0.5,
-            alpha: Math.random() * 0.5 + 0.2,
-        };
+    const keyFmt = d => d.toISOString().slice(0,10);
+    function labelFmt(s) {
+      const e = new Date(s); e.setDate(s.getDate()+6);
+      const o={month:'short',day:'numeric'};
+      return `${s.toLocaleDateString(undefined,o)} – ${e.toLocaleDateString(undefined,o)}, ${e.getFullYear()}`;
     }
-
-    function initParticles() {
-        for (let i = 0; i < 150; i++) {
-            particles.push(createParticle());
-        }
-    }
-
-    function animateParticles() {
-        snowCtx.clearRect(0, 0, snowCanvas.width, snowCanvas.height);
-        for (const p of particles) {
-            p.x += p.vx;
-            p.y += p.vy;
-
-            if (p.y > snowCanvas.height) {
-                p.x = Math.random() * snowCanvas.width;
-                p.y = -5;
-            }
-            if (p.x > snowCanvas.width) p.x = 0;
-            if (p.x < 0) p.x = snowCanvas.width;
-
-            snowCtx.beginPath();
-            snowCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-            snowCtx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
-            snowCtx.fill();
-        }
-        requestAnimationFrame(animateParticles);
-    }
-    initParticles();
-    animateParticles();
-
-    // =================================================================
-    // ** NEW: Custom Chart Controller for "Ice Crystal" Bars **
-    // =================================================================
-    class IceCrystalController extends Chart.controllers.bar {
-        draw() {
-            const ctx = this.chart.ctx;
-            const meta = this.getMeta();
-
-            // Seedable pseudo-random number generator for consistent shapes
-            const LCG = (seed) => () => (seed = (seed * 1664525 + 1013904223) & 0x7FFFFFFF) / 0x7FFFFFFF;
-
-            meta.data.forEach((bar, index) => {
-                const { x, y, base, width } = bar;
-                const height = base - y;
-                if (height <= 0) return;
-
-                const random = LCG(index * this.index + bar.raw); // Seed with bar data
-                
-                ctx.save();
-                ctx.fillStyle = bar.options.backgroundColor;
-                ctx.strokeStyle = bar.options.borderColor;
-                ctx.lineWidth = bar.options.borderWidth;
-
-                // Draw jagged ice crystal path
-                ctx.beginPath();
-                ctx.moveTo(x - width / 2, base);
-                ctx.lineTo(x - width / 2, y + random() * 10); // Left side
-                
-                // Top surface
-                let currentX = x - width / 2;
-                while (currentX < x + width / 2) {
-                    const nextX = Math.min(x + width / 2, currentX + random() * 15 + 5);
-                    ctx.lineTo(nextX, y - 5 + random() * 10);
-                    currentX = nextX;
-                }
-                ctx.lineTo(x + width / 2, y + random() * 10); // Ensure it reaches the end
-                
-                ctx.lineTo(x + width / 2, base); // Right side
-                ctx.closePath();
-
-                ctx.fill();
-                if (bar.options.borderWidth > 0) {
-                    ctx.stroke();
-                }
-                ctx.restore();
-            });
-        }
-    }
-    IceCrystalController.id = 'icecrystal';
-    Chart.register(IceCrystalController);
-
-    // ... The rest of the Chart.js setup and application logic
-    // is largely the same, but now uses 'icecrystal' as the chart type
-    // and registers the reflection plugin.
 
     let epochs = (() => {
       const d = loadData(), ks = Object.keys(d);
@@ -304,74 +183,94 @@
         current = 0;
     }
 
-    const chartCtx = document.getElementById('chart').getContext('2d');
-    const chart = new Chart(chartCtx, {
-        type: 'icecrystal', // ** Use the custom controller **
-        // ... data and options are configured as before ...
-        data: {
-          labels: [],
-          datasets: [
-            { label: 'Pharaoh', data: [], backgroundColor: 'rgba(239, 68, 68, 0.7)', borderColor: 'rgba(255, 150, 150, 0.9)', borderWidth: 1.5 },
-            { label: 'Velodrome', data: [], backgroundColor: 'rgba(59, 130, 246, 0.7)', borderColor: 'rgba(150, 180, 255, 0.9)', borderWidth: 1.5 },
-          ]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          scales: {
-            x: { stacked: true, ticks: { color: 'var(--text-primary)' }, grid: { display: false } },
-            y: { stacked: true, ticks: { color: 'var(--text-primary)', callback: (v) => '$' + v }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
+    const ctx = document.getElementById('chart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Pharaoh',
+            data: [],
+            backgroundColor: 'rgba(239, 68, 68, 0.8)', // Red
+            borderColor: 'var(--pharaoh-color)',
+            borderWidth: 1
           },
-          plugins: {
-            legend: { labels: { color: 'var(--text-primary)' } },
-            tooltip: {
-              backgroundColor: 'rgba(10,10,10,0.9)', titleFont: { size: 14 },
-              callbacks: { title: ctx => prepare()[ctx[0].dataIndex].label },
-            }
+          {
+            label: 'Velodrome',
+            data: [],
+            backgroundColor: 'rgba(56, 122, 223, 0.8)', // Blue
+            borderColor: 'var(--velodrome-color)',
+            borderWidth: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: 8 },
+        scales: {
+          x: {
+            stacked: true,
+            ticks: { color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" } },
+            grid: { display: false }
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            ticks: {
+                color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" },
+                callback: function(value) { return '$' + value; }
+            },
+            grid: { color: 'rgba(255, 255, 255, 0.05)' }
           }
         },
-        plugins: [glassReflectionPlugin] // Register the reflection plugin
+        plugins: {
+          tooltip: {
+            backgroundColor: 'rgba(10,10,10,0.8)', titleFont: { family: "'Inter', sans-serif", weight: '600', size: 14 },
+            bodyFont: { family: "'Inter', sans-serif" }, titleColor: '#FFFFFF', bodyColor: '#CCCCCC',
+            padding: 12, cornerRadius: 8,
+            callbacks: {
+              title: ctx => prepare()[ctx[0].dataIndex].label
+            },
+          },
+          legend: {
+            display: true,
+            labels: { color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" } }
+          }
+        }
+      }
     });
 
-    // ... All other logic (prepare, render, event listeners) remains the same
-    // but I will include it for a complete, runnable file.
-    
     function prepare() {
       const d = loadData();
       return epochs.map((k,i) => {
         const v = d[k] || { pharaoh:0, velodrome:0 };
         return {
-            key: k, idx: i+1, label: labelFmt(new Date(k)),
-            pharaoh: v.pharaoh || 0, velodrome: v.velodrome || 0,
+            key: k, idx: i+1,
+            label: labelFmt(new Date(k)),
+            pharaoh: v.pharaoh || 0,
+            velodrome: v.velodrome || 0,
             total: (v.pharaoh || 0) + (v.velodrome || 0)
         };
       });
     }
 
-    const epochNumEl = document.getElementById('epochNum');
-    const epochRangeEl = document.getElementById('epochRange');
-
     function render() {
       const arr = prepare();
       if (!arr.length) return;
+
       chart.data.labels = arr.map(x => `Epoch ${x.idx}`);
       chart.data.datasets[0].data = arr.map(x => x.pharaoh);
       chart.data.datasets[1].data = arr.map(x => x.velodrome);
       chart.update();
-      if (current >= arr.length) current = arr.length - 1;
-      
-      const elementsToFade = [epochNumEl, epochRangeEl];
-      elementsToFade.forEach(el => el.classList.add('fade-out'));
-      setTimeout(() => {
-          epochNumEl.textContent = `Epoch #${arr[current].idx}`;
-          epochRangeEl.textContent = arr[current].label;
-          elementsToFade.forEach(el => {
-              el.classList.remove('fade-out');
-              el.classList.add('fade-in');
-          });
-      }, 150);
 
+      if (current >= arr.length) current = arr.length - 1;
+      document.getElementById('epochNum').textContent   = `Epoch #${arr[current].idx}`;
+      document.getElementById('epochRange').textContent = arr[current].label;
       document.getElementById('prev').disabled = (current === 0);
       document.getElementById('next').disabled = (current === arr.length - 1);
+
       const formatCurrency = (num) => `$${num.toFixed(2)}`;
       document.getElementById('tableBody').innerHTML = arr.map(x => `
         <tr>
@@ -383,24 +282,13 @@
       `).reverse().join('');
     }
 
-    document.querySelectorAll(".btn, .circle-btn").forEach(button => {
-        button.addEventListener("click", e => {
-            const crack = document.createElement("span");
-            crack.classList.add("ice-crack");
-            crack.style.left = `${e.clientX - button.getBoundingClientRect().left}px`;
-            crack.style.top = `${e.clientY - button.getBoundingClientRect().top}px`;
-            button.appendChild(crack);
-            setTimeout(() => crack.remove(), 500);
-        });
-    });
-
     document.getElementById('addPrev').onclick = () => { let d=new Date(epochs[0]); d.setDate(d.getDate()-7); epochs.unshift(keyFmt(d)); current=0; render(); };
     document.getElementById('delPrev').onclick = () => { if(epochs.length>1){ epochs.shift(); if(current>0) current--; render(); } };
     document.getElementById('addNext').onclick = () => { let d=new Date(epochs[epochs.length-1]); d.setDate(d.getDate()+7); epochs.push(keyFmt(d)); current=epochs.length-1; render(); };
     document.getElementById('delNext').onclick = () => { if(epochs.length>1){ epochs.pop(); if(current>=epochs.length) current=epochs.length-1; render(); } };
-    document.getElementById('prev').onclick = () => { if(current>0) { current--; render(); } };
-    document.getElementById('next').onclick = () => { if(current<epochs.length-1) { current++; render(); } };
-    document.getElementById('addBtn').onclick = () => {
+    document.getElementById('prev').onclick    = () => { if(current>0) current--; render(); };
+    document.getElementById('next').onclick    = () => { if(current<epochs.length-1) current++; render(); };
+    document.getElementById('addBtn').onclick  = () => {
       const c = document.getElementById('crypto').value;
       const a = parseFloat(document.getElementById('amount').value);
       if(!c||isNaN(a)) return alert('Please select a crypto and enter a valid amount.');
@@ -409,7 +297,7 @@
       d[k][c] = a;
       saveData(d); document.getElementById('amount').value=''; render();
     };
-    
+
     render();
   };
   </script>
