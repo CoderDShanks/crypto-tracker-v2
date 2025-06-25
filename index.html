@@ -2,78 +2,113 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <title>Crypto Dividend Tracker - Minimalist Edition</title>
+  <title>Crypto Dividend Tracker - Aurora Edition</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --background: #111113;
-      --surface: #1C1C1E;
-      --pharaoh-color: #EF4444; /* Red */
-      --velodrome-color: #387ADF; /* Blue */
-      --text-primary: #F1F1F1;
-      --text-secondary: #8E8E93;
-      --border: #3A3A3C;
+      --background: #0D1117;
+      --surface: #161B22;
+      --pharaoh-color: #F87171; /* Softer Red */
+      --velodrome-color: #60A5FA; /* Softer Blue */
+      --text-primary: #E6EDF3;
+      --text-secondary: #7D8590;
+      --border: #30363D;
+      --glow-color: rgba(139, 193, 255, 0.4);
     }
+    /* ─── Base & Aurora Background ─────────────────────────────────── */
     html, body {
       height: 100%; margin: 0; padding: 0; overflow: hidden;
       background-color: var(--background);
       font-family: 'Inter', sans-serif;
       color: var(--text-primary);
     }
-    body::before {
-        content: ''; position: absolute; top: 0; left: 0;
-        width: 100%; height: 100%;
-        background-image:
-            linear-gradient(to right, rgba(60, 60, 60, 0.2) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(60, 60, 60, 0.2) 1px, transparent 1px);
-        background-size: 3rem 3rem;
-        animation: bg-pan 60s linear infinite;
-        opacity: 0.5;
+    #aurora-background, .star-layer {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      overflow: hidden; pointer-events: none;
     }
-    @keyframes bg-pan { from { background-position: 0 0; } to { background-position: -3rem 0; } }
+    .star-layer {
+      background-image:
+        radial-gradient(1px 1px at 25px 5px, white, transparent),
+        radial-gradient(1px 1px at 50px 25px, white, transparent),
+        radial-gradient(1.5px 1.5px at 125px 80px, white, transparent),
+        radial-gradient(1px 1px at 220px 180px, white, transparent);
+      background-size: 250px 250px;
+      animation: pan-stars 120s linear infinite;
+    }
+    .star-layer.layer-2 { animation-duration: 90s; opacity: 0.6; }
+    .star-layer.layer-3 { animation-duration: 60s; opacity: 0.3; }
+    @keyframes pan-stars { from { transform: translateX(0); } to { transform: translateX(-250px); } }
+    
+    #cursor-glow {
+        position: fixed;
+        width: 1000px; height: 1000px;
+        background: radial-gradient(circle, rgba(60, 130, 223, 0.1), transparent 40%);
+        border-radius: 50%;
+        pointer-events: none;
+        transform: translate(-50%, -50%);
+        transition: opacity 0.3s;
+        z-index: -1;
+    }
+    /* ─── Main Layout & Panel Styling ──────────────────────────────── */
     .container {
+      position: relative; z-index: 1;
       display: flex; flex-direction: column; height: 100%;
       padding: 1.5rem; box-sizing: border-box; overflow-y: auto;
       -ms-overflow-style: none; scrollbar-width: none;
     }
     .container::-webkit-scrollbar { display: none; }
+    .panel {
+      background: rgba(22, 27, 34, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.5rem; margin-bottom: 1.25rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      animation: panel-fade-in 0.6s ease-out forwards, panel-glow 3s infinite alternate;
+      opacity: 0;
+    }
+    @keyframes panel-fade-in { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes panel-glow {
+        from { box-shadow: 0 0 12px rgba(0,0,0,0.5), 0 0 2px var(--glow-color); }
+        to   { box-shadow: 0 0 24px rgba(0,0,0,0.5), 0 0 8px var(--glow-color); }
+    }
+    #chartPanel { animation-delay: 0.1s; }
+    #controls { animation-delay: 0.2s; }
+    .panel:last-child { animation-delay: 0.3s; }
+
+    /* ─── Typography & Text Effects ────────────────────────────────── */
     h1 {
       font-size: 2.25rem; font-weight: 700; text-align: center;
       margin-bottom: .25rem; letter-spacing: -1px;
+      text-shadow: 0 0 10px var(--glow-color);
     }
     p.subtitle {
       text-align: center; color: var(--text-secondary);
       margin-bottom: 2rem; font-weight: 400;
     }
     h2 { font-weight: 600; font-size: 1.25rem; margin: 0 0 1rem 0; }
-    .panel {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 1.5rem; margin-bottom: 1.25rem;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-      animation: panel-fade-in 0.6s ease-out forwards;
-      opacity: 0;
-    }
-    @keyframes panel-fade-in { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-    #chartPanel { animation-delay: 0.1s; }
-    #controls { animation-delay: 0.2s; }
-    .panel:last-child { animation-delay: 0.3s; }
+    .epoch-text { transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out; }
+    .fade-out { opacity: 0; transform: translateY(-10px); }
+    .fade-in { opacity: 1; transform: translateY(0); }
+
+    /* ─── Chart & Controls ─────────────────────────────────────────── */
     #chartContainer { height: 320px; }
     canvas { width:100% !important; height:100% !important; cursor: crosshair; }
     .row { display:flex; align-items:center; justify-content:center; gap: 0.75rem; }
     .row.space { justify-content: flex-end; }
     .grid { display:flex; flex-wrap:wrap; gap:.75rem; }
     .grid > * { flex:1; min-width:120px; }
+    .btn, .circle-btn { position: relative; overflow: hidden; }
     .btn {
       background-color: var(--text-primary); color: var(--background);
       font-weight: 600; border: none; border-radius:10px;
       padding:.75rem 1.5rem; font-size:1rem; cursor:pointer;
-      transition: background-color .2s ease, transform .2s ease;
+      transition: all .2s ease;
     }
-    .btn:hover { background-color: #CCCCCC; }
-    .btn:active { transform: scale(.97); }
+    .btn:hover { background-color: #CCCCCC; transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
     .circle-btn {
       width:44px; height:44px; background: rgba(255, 255, 255, 0.05);
       color: var(--text-secondary); border:1px solid var(--border);
@@ -81,59 +116,73 @@
       display:grid; place-items:center; transition: all .2s ease;
     }
     .circle-btn:hover {
-      background: rgba(255, 255, 255, 0.1); color: var(--text-primary);
-      border-color: var(--text-primary);
+      transform: translateY(-2px); color: var(--text-primary);
+      border-color: var(--glow-color);
+      box-shadow: 0 0 15px var(--glow-color);
     }
-    .circle-btn:active { transform: scale(.95); }
-    .circle-btn:disabled { opacity: 0.4; cursor: not-allowed; background: transparent; border-color: var(--border); }
+    .circle-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; border-color: var(--border); }
+    .ripple {
+      position: absolute; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.6);
+      transform: scale(0);
+      animation: ripple-effect 0.6s linear;
+    }
+    @keyframes ripple-effect { to { transform: scale(4); opacity: 0; } }
+
+    /* ─── Inputs & Table ───────────────────────────────────────────── */
     select, input[type=number] {
       width:100%; padding:.75rem; background: var(--background);
       border:1px solid var(--border); border-radius:10px; color:var(--text-primary);
-      font-size:1rem; transition: border-color 0.2s, box-shadow 0.2s;
+      font-size:1rem; transition: all 0.2s;
     }
     select:focus, input:focus {
-        outline: none; border-color: var(--text-primary);
-        box-shadow: 0 0 0 3px rgba(241, 241, 241, 0.3);
+        outline: none; border-color: var(--glow-color);
+        box-shadow: 0 0 15px var(--glow-color);
     }
     select {
       appearance:none;
       background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%238E8E93' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
       background-repeat:no-repeat; background-position:right 1rem center;
     }
-    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    input[type=number] { -moz-appearance: textfield; }
     table { width:100%; border-collapse:collapse; margin-top:.75rem; }
     th, td { padding:.8rem 1rem; border-bottom:1px solid var(--border); }
-    th:not(:first-child) { text-align: right; }
-    th:first-child { text-align: left; }
-    td:not(:first-child) { text-align: right; }
-    td:first-child { text-align: left; }
+    th:not(:first-child), td:not(:first-child) { text-align: right; }
+    th:first-child, td:first-child { text-align: left; }
     th { color:var(--text-secondary); font-weight: 500; font-size: 0.9rem;}
-    tbody tr { transition: background-color 0.2s ease; }
-    tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
+    tbody tr { transition: background-color 0.2s ease, transform 0.2s ease; }
+    tbody tr:hover {
+        background-color: rgba(60, 130, 223, 0.1);
+        transform: scale(1.02);
+    }
   </style>
 </head>
 <body>
+  <div id="aurora-background">
+      <div id="cursor-glow"></div>
+      <div class="star-layer layer-1"></div>
+      <div class="star-layer layer-2"></div>
+      <div class="star-layer layer-3"></div>
+  </div>
   <div class="container">
     <h1>Crypto Dividend Tracker</h1>
-    <p class="subtitle">A minimal and elegant way to track your earnings.</p>
+    <p class="subtitle">An aurora-themed dashboard for tracking your earnings.</p>
     <div id="chartPanel" class="panel">
       <h2>Dividend Performance</h2>
       <div id="chartContainer"><canvas id="chart"></canvas></div>
     </div>
     <div id="controls" class="panel">
       <div class="row space">
-        <button id="delPrev" class="circle-btn" title="Delete Earliest Epoch">−</button>
-        <button id="addPrev" class="circle-btn" title="Add Earlier Epoch">＋</button>
-        <button id="addNext" class="circle-btn" title="Add Later Epoch">＋</button>
-        <button id="delNext" class="circle-btn" title="Delete Latest Epoch">−</button>
+        <button class="circle-btn" id="delPrev" title="Delete Earliest Epoch">−</button>
+        <button class="circle-btn" id="addPrev" title="Add Earlier Epoch">＋</button>
+        <button class="circle-btn" id="addNext" title="Add Later Epoch">＋</button>
+        <button class="circle-btn" id="delNext" title="Delete Latest Epoch">−</button>
       </div>
       <div class="row" style="margin:1rem 0;">
-        <button id="prev" class="circle-btn">&lt;</button>
-        <span id="epochNum" style="font-size:1.25rem; font-weight:600; flex-grow:1; text-align:center;">Epoch #1</span>
-        <button id="next" class="circle-btn">&gt;</button>
+        <button class="circle-btn" id="prev">&lt;</button>
+        <span id="epochNum" class="epoch-text" style="font-size:1.25rem; font-weight:600; flex-grow:1; text-align:center;">Epoch #1</span>
+        <button class="circle-btn" id="next">&gt;</button>
       </div>
-      <div id="epochRange" style="text-align:center;color:var(--text-secondary);margin-bottom:1.5rem;">Loading…</div>
+      <div id="epochRange" class="epoch-text" style="text-align:center;color:var(--text-secondary);margin-bottom:1.5rem;">Loading…</div>
       <div class="grid">
         <select id="crypto">
           <option value="">Choose Crypto</option>
@@ -190,11 +239,9 @@
 
     const glassReflectionPlugin = {
         id: 'glassReflection',
-        afterEvent: (chart, args, options) => {
+        afterEvent: (chart, args) => {
             const event = args.event;
-            const type = event.type;
-
-            if (type === 'mousemove') {
+            if (event.type === 'mousemove') {
                 const elements = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, true);
                 let needsRender = false;
                 if (elements.length > 0) {
@@ -210,51 +257,45 @@
                     needsRender = true;
                 }
                 if (needsRender) chart.draw();
-            } else if (type === 'mouseout' && hoveredElement) {
+            } else if (event.type === 'mouseout' && hoveredElement) {
                 hoveredElement = null;
                 mousePosition = null;
                 chart.draw();
             }
         },
-        afterDraw: (chart, args, options) => {
+        afterDraw: (chart) => {
             if (hoveredElement && mousePosition) {
                 const ctx = chart.ctx;
                 const { x, y, base, width } = hoveredElement;
                 const height = base - y;
-
                 ctx.save();
                 ctx.beginPath();
                 ctx.rect(x - width / 2, y, width, height);
                 ctx.clip();
-                
                 const gradient = ctx.createRadialGradient(
                     mousePosition.x, mousePosition.y, 0,
                     mousePosition.x, mousePosition.y, width * 0.8
                 );
                 gradient.addColorStop(0, 'rgba(255, 255, 255, 0.5)');
                 gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-                
                 ctx.fillStyle = gradient;
                 ctx.fillRect(x - width / 2, y, width, height);
                 ctx.restore();
             }
         }
     };
-    
-    const ctx = document.getElementById('chart').getContext('2d');
-    
-    // ** NEW: Create advanced multi-stop gradients for a shiny glass effect **
-    const pharaohGradient = ctx.createLinearGradient(0, 0, 0, 320);
-    pharaohGradient.addColorStop(0, 'rgba(255, 130, 130, 0.9)'); // Bright highlight
-    pharaohGradient.addColorStop(0.1, 'rgba(239, 68, 68, 0.8)');   // Main color
-    pharaohGradient.addColorStop(0.5, 'rgba(200, 50, 50, 0.9)');    // Darker mid-tone
-    pharaohGradient.addColorStop(1, 'rgba(239, 68, 68, 0.85)');  // Lighter bottom
 
+    const ctx = document.getElementById('chart').getContext('2d');
+    const pharaohGradient = ctx.createLinearGradient(0, 0, 0, 320);
+    pharaohGradient.addColorStop(0, 'rgba(248, 113, 113, 1)');
+    pharaohGradient.addColorStop(0.1, 'rgba(239, 68, 68, 0.9)');
+    pharaohGradient.addColorStop(0.5, 'rgba(220, 38, 38, 0.9)');
+    pharaohGradient.addColorStop(1, 'rgba(239, 68, 68, 0.9)');
     const velodromeGradient = ctx.createLinearGradient(0, 0, 0, 320);
-    velodromeGradient.addColorStop(0, 'rgba(130, 180, 255, 0.9)');// Bright highlight
-    velodromeGradient.addColorStop(0.1, 'rgba(56, 122, 223, 0.8)'); // Main color
-    velodromeGradient.addColorStop(0.5, 'rgba(40, 90, 180, 0.9)');   // Darker mid-tone
-    velodromeGradient.addColorStop(1, 'rgba(56, 122, 223, 0.85)');// Lighter bottom
+    velodromeGradient.addColorStop(0, 'rgba(96, 165, 250, 1)');
+    velodromeGradient.addColorStop(0.1, 'rgba(59, 130, 246, 0.9)');
+    velodromeGradient.addColorStop(0.5, 'rgba(37, 99, 235, 0.9)');
+    velodromeGradient.addColorStop(1, 'rgba(59, 130, 246, 0.9)');
 
     const chart = new Chart(ctx, {
       type: 'bar',
@@ -262,59 +303,31 @@
         labels: [],
         datasets: [
           {
-            label: 'Pharaoh',
-            data: [],
-            backgroundColor: pharaohGradient,
-            borderColor: 'rgba(255,255,255,0.4)',
-            borderWidth: 1.5,
-            borderRadius: 5,
+            label: 'Pharaoh', data: [], backgroundColor: pharaohGradient,
+            borderColor: 'rgba(255,255,255,0.4)', borderWidth: 1.5, borderRadius: 5,
           },
           {
-            label: 'Velodrome',
-            data: [],
-            backgroundColor: velodromeGradient,
-            borderColor: 'rgba(255,255,255,0.4)',
-            borderWidth: 1.5,
-            borderRadius: 5,
+            label: 'Velodrome', data: [], backgroundColor: velodromeGradient,
+            borderColor: 'rgba(255,255,255,0.4)', borderWidth: 1.5, borderRadius: 5,
           }
         ]
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: { padding: 8 },
+        responsive: true, maintainAspectRatio: false, layout: { padding: 8 },
         scales: {
-          x: {
-            stacked: true,
-            ticks: { color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" } },
-            grid: { display: false }
-          },
-          y: {
-            stacked: true,
-            beginAtZero: true,
-            ticks: {
-                color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" },
-                callback: function(value) { return '$' + value; }
-            },
-            grid: { color: 'rgba(255, 255, 255, 0.05)' }
-          }
+          x: { stacked: true, ticks: { color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" } }, grid: { display: false } },
+          y: { stacked: true, beginAtZero: true, ticks: { color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" }, callback: (v) => '$' + v }, grid: { color: 'rgba(255, 255, 255, 0.05)' } }
         },
         plugins: {
           tooltip: {
             backgroundColor: 'rgba(10,10,10,0.8)', titleFont: { family: "'Inter', sans-serif", weight: '600', size: 14 },
             bodyFont: { family: "'Inter', sans-serif" }, titleColor: '#FFFFFF', bodyColor: '#CCCCCC',
-            padding: 12, cornerRadius: 8,
-            callbacks: {
-              title: ctx => prepare()[ctx[0].dataIndex].label
-            },
+            padding: 12, cornerRadius: 8, callbacks: { title: ctx => prepare()[ctx[0].dataIndex].label },
           },
-          legend: {
-            display: true,
-            labels: { color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" } }
-          }
+          legend: { display: true, labels: { color: 'var(--text-primary)', font: { family: "'Inter', sans-serif" } } }
         }
       },
-      plugins: [glassReflectionPlugin] // Register the custom plugin
+      plugins: [glassReflectionPlugin]
     });
 
     function prepare() {
@@ -322,30 +335,39 @@
       return epochs.map((k,i) => {
         const v = d[k] || { pharaoh:0, velodrome:0 };
         return {
-            key: k, idx: i+1,
-            label: labelFmt(new Date(k)),
-            pharaoh: v.pharaoh || 0,
-            velodrome: v.velodrome || 0,
+            key: k, idx: i+1, label: labelFmt(new Date(k)),
+            pharaoh: v.pharaoh || 0, velodrome: v.velodrome || 0,
             total: (v.pharaoh || 0) + (v.velodrome || 0)
         };
       });
     }
 
+    const epochNumEl = document.getElementById('epochNum');
+    const epochRangeEl = document.getElementById('epochRange');
+
     function render() {
       const arr = prepare();
       if (!arr.length) return;
-
       chart.data.labels = arr.map(x => `Epoch ${x.idx}`);
       chart.data.datasets[0].data = arr.map(x => x.pharaoh);
       chart.data.datasets[1].data = arr.map(x => x.velodrome);
       chart.update();
-
       if (current >= arr.length) current = arr.length - 1;
-      document.getElementById('epochNum').textContent   = `Epoch #${arr[current].idx}`;
-      document.getElementById('epochRange').textContent = arr[current].label;
+      
+      // Epoch Text cross-fade animation
+      const elementsToFade = [epochNumEl, epochRangeEl];
+      elementsToFade.forEach(el => el.classList.add('fade-out'));
+      setTimeout(() => {
+          epochNumEl.textContent = `Epoch #${arr[current].idx}`;
+          epochRangeEl.textContent = arr[current].label;
+          elementsToFade.forEach(el => {
+              el.classList.remove('fade-out');
+              el.classList.add('fade-in');
+          });
+      }, 150);
+
       document.getElementById('prev').disabled = (current === 0);
       document.getElementById('next').disabled = (current === arr.length - 1);
-
       const formatCurrency = (num) => `$${num.toFixed(2)}`;
       document.getElementById('tableBody').innerHTML = arr.map(x => `
         <tr>
@@ -357,12 +379,38 @@
       `).reverse().join('');
     }
 
+    function createRipple(event) {
+        const button = event.currentTarget;
+        const circle = document.createElement("span");
+        const diameter = Math.max(button.clientWidth, button.clientHeight);
+        const radius = diameter / 2;
+        circle.style.width = circle.style.height = `${diameter}px`;
+        circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
+        circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
+        circle.classList.add("ripple");
+        const ripple = button.getElementsByClassName("ripple")[0];
+        if (ripple) { ripple.remove(); }
+        button.appendChild(circle);
+    }
+    document.querySelectorAll(".btn, .circle-btn").forEach(button => button.addEventListener("click", createRipple));
+    
+    document.getElementById('cursor-glow').style.opacity = '0';
+    document.addEventListener('mousemove', e => {
+        const glow = document.getElementById('cursor-glow');
+        glow.style.opacity = '1';
+        glow.style.left = `${e.clientX}px`;
+        glow.style.top = `${e.clientY}px`;
+    });
+    document.addEventListener('mouseleave', () => {
+        document.getElementById('cursor-glow').style.opacity = '0';
+    });
+
     document.getElementById('addPrev').onclick = () => { let d=new Date(epochs[0]); d.setDate(d.getDate()-7); epochs.unshift(keyFmt(d)); current=0; render(); };
     document.getElementById('delPrev').onclick = () => { if(epochs.length>1){ epochs.shift(); if(current>0) current--; render(); } };
     document.getElementById('addNext').onclick = () => { let d=new Date(epochs[epochs.length-1]); d.setDate(d.getDate()+7); epochs.push(keyFmt(d)); current=epochs.length-1; render(); };
     document.getElementById('delNext').onclick = () => { if(epochs.length>1){ epochs.pop(); if(current>=epochs.length) current=epochs.length-1; render(); } };
-    document.getElementById('prev').onclick    = () => { if(current>0) current--; render(); };
-    document.getElementById('next').onclick    = () => { if(current<epochs.length-1) current++; render(); };
+    document.getElementById('prev').onclick    = () => { if(current>0) { current--; render(); } };
+    document.getElementById('next').onclick    = () => { if(current<epochs.length-1) { current++; render(); } };
     document.getElementById('addBtn').onclick  = () => {
       const c = document.getElementById('crypto').value;
       const a = parseFloat(document.getElementById('amount').value);
